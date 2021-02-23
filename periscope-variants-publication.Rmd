@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE,dev = c('pdf', 'png'))
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, dev = c('pdf', 'png'))
 
 require(ggplot2)
 require(reshape2)
@@ -21,15 +21,20 @@ require(FactoMineR)
 require(factoextra)
 require(png)
 require(hrbrthemes)
+require(ggridges)
+require(jtools)
+require(ggstance)
+require(ggbeeswarm)
 
-navy=rgb(25,62,114,maxColorValue = 255)
-coral=rgb(234,93,78,maxColorValue = 255)
-orange=rgb(242,147,48,maxColorValue = 255)
-yellow=rgb(254,212,122,maxColorValue = 255)
-purple=rgb(102,103,173,maxColorValue = 255)
-aqua=rgb(46,169,176,maxColorValue = 255)
-green=rgb(70,168,108,maxColorValue = 255)
-grey=rgb(172,188,195,maxColorValue = 255)
+
+navy = rgb(25, 62, 114, maxColorValue = 255)
+coral = rgb(234, 93, 78, maxColorValue = 255)
+orange = rgb(242, 147, 48, maxColorValue = 255)
+yellow = rgb(254, 212, 122, maxColorValue = 255)
+purple = rgb(102, 103, 173, maxColorValue = 255)
+aqua = rgb(46, 169, 176, maxColorValue = 255)
+green = rgb(70, 168, 108, maxColorValue = 255)
+grey = rgb(172, 188, 195, maxColorValue = 255)
 
 # Define some functions
 reorder_within <- function(x, by, within, fun = mean, sep = "___", ...) {
@@ -52,19 +57,19 @@ scale_x_reordered <- function(..., sep = "___") {
 #==============================
 
 
-normalize <- function(x){
-  return((x-min(x)) / (max(x)-min(x)))
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
 }
 
 
 #==============================
 # format ggpairs
 #==============================
-  
-gpairs_lower <- function(g){
+
+gpairs_lower <- function(g) {
   g$plots <- g$plots[-(1:g$nrow)]
   g$yAxisLabels <- g$yAxisLabels[-1]
-  g$nrow <- g$nrow -1
+  g$nrow <- g$nrow - 1
 
   g$plots <- g$plots[-(seq(g$ncol, length(g$plots), by = g$ncol))]
   g$xAxisLabels <- g$xAxisLabels[-g$ncol]
@@ -77,17 +82,17 @@ gpairs_lower <- function(g){
 # Add regression line to ggpairs & R/p values
 #==============================
 
-add_stat_smooth <- function(data, mapping, ...){
-  p <- ggplot(data = data, mapping = mapping) + 
-   
-   geom_point() +
-     stat_smooth(method=lm, fill="grey70", color="grey50", ...)+
-    stat_cor(geom="text",size=3,method="pearson",fill='#FFFFFF',color='#4D4845',alpha=1,label.y=y,vjust=1,label.padding=unit(0.2, "lines"),aes(label=paste("R",as.character(..r..),sep="~`=`~")))+
-    stat_cor(geom="text",size=3,method="pearson",fill='#FFFFFF',color='#4D4845',alpha=1,label.y=y,label.padding=unit(0.2, "lines"),aes(label=paste("p",as.character(..p..*n),sep="~`=`~")),vjust=2.1)+
+add_stat_smooth <- function(data, mapping, ...) {
+  p <- ggplot(data = data, mapping = mapping) +
+
+    geom_point() +
+    stat_smooth(method = lm, fill = "grey70", color = "grey50", ...) +
+    stat_cor(geom = "text", size = 3, method = "pearson", fill = '#FFFFFF', color = '#4D4845', alpha = 1, label.y = y, vjust = 1, label.padding = unit(0.2, "lines"), aes(label = paste("R", as.character(..r..), sep = "~`=`~"))) +
+    stat_cor(geom = "text", size = 3, method = "pearson", fill = '#FFFFFF', color = '#4D4845', alpha = 1, label.y = y, label.padding = unit(0.2, "lines"), aes(label = paste("p", as.character(..p.. * n), sep = "~`=`~")), vjust = 2.1) +
     theme(
-     
+
     )
-    # ggpubr::stat_regline_equation(geom="label",color="grey18",aes(label =  paste(..rr.label..)),fill='white',color=grey,size=3,alpha=0.5)
+  # ggpubr::stat_regline_equation(geom="label",color="grey18",aes(label =  paste(..rr.label..)),fill='white',color=grey,size=3,alpha=0.5)
   p
 }
 
@@ -102,7 +107,7 @@ colorado <- function(src, boulder) {
   src_levels <- levels(src)                                 # retrieve the levels in their order
   brave <- boulder %in% src_levels                          # make sure everything we want to make bold is actually in the factor levels
   if (all(brave)) {                                         # if so
-    b_pos <- purrr::map_int(boulder, ~which(.==src_levels)) # then find out where they are
+    b_pos <- purrr::map_int(boulder, ~which(. == src_levels)) # then find out where they are
     b_vec <- rep("plain", length(src_levels))               # make'm all plain first
     b_vec[b_pos] <- "bold"                                  # make our targets bold
     b_vec                                                   # return the new vector
@@ -124,477 +129,1638 @@ colorado <- function(src, boulder) {
 
 setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
 
-pillar1_canonical_counts=read.table("supplementary_file_2_pillar_1_canonical_counts.csv",header=T,sep=",")
-pillar2_canonical_counts=read.table("supplementary_file_3_pillar_2_canonical_counts.csv",header=T,sep=",")
+pillar1_canonical_counts = read.table("supplementary_file_2_pillar_1_canonical_counts.csv", header = T, sep = ",")
+pillar2_canonical_counts = read.table("supplementary_file_3_pillar_2_canonical_counts.csv", header = T, sep = ",")
 
-nrow(pillar1_canonical_counts %>% group_by(sample) %>% dplyr::summarise())
-nrow(pillar2_canonical_counts %>% group_by(sample) %>% dplyr::summarise())
+nrow(pillar1_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+nrow(pillar2_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
 
-pillar1_canonical_counts = pillar1_canonical_counts %>% filter(mapped_reads >= 50000) %>% filter(orf!="ORF1a")
-pillar2_canonical_counts = pillar2_canonical_counts %>% filter(mapped_reads >= 50000) %>% filter(orf!="ORF1a")
+pillar1_canonical_counts = pillar1_canonical_counts %>%
+  filter(mapped_reads >= 50000) %>%
+  filter(orf != "ORF1a")
+pillar2_canonical_counts = pillar2_canonical_counts %>%
+  filter(mapped_reads >= 50000) %>%
+  filter(orf != "ORF1a")
 
-nrow(pillar1_canonical_counts %>% group_by(sample) %>% dplyr::summarise())
-nrow(pillar2_canonical_counts %>% group_by(sample) %>% dplyr::summarise())
+nrow(pillar1_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+nrow(pillar2_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
 
-pillar1_canonical_counts$pillar="Pillar 1"
-pillar2_canonical_counts$pillar="Pillar 2"
+pillar1_canonical_counts$pillar = "Pillar 1"
+pillar2_canonical_counts$pillar = "Pillar 2"
 
-metadata_pillar1 = read.table("supplementary_file_1_metadata.csv",header=T,sep=",")
-metadata_pillar2 = read.table("supplementary_table_5_pillar_2_metadata.csv",header=T,sep=",")
+metadata_pillar1 = read.table("supplementary_file_1_metadata.csv", header = T, sep = ",")
+metadata_pillar2 = read.table("supplementary_table_5_pillar_2_metadata.csv", header = T, sep = ",")
 
 
 
-clinical = read.table("supplementary_file_4_clnical_data.csv",header=T,sep=",")
+clinical = read.table("supplementary_file_4_clnical_data.csv", header = T, sep = ",")
 
-clinical$days_since_symptom_onset = as.Date(clinical$DiagnosisDTC,format="%d/%m/%Y") - as.Date(clinical$DateOfOnset,format="%d/%m/%Y")
+clinical$days_since_symptom_onset = as.Date(clinical$DiagnosisDTC, format = "%d/%m/%Y") - as.Date(clinical$DateOfOnset, format = "%d/%m/%Y")
 
 
 # all = merge(metadata,clinical,by.x="sample",by.y="external_id")
-pillar1  = merge(metadata_pillar1,pillar1_canonical_counts)
-pillar2  = merge(metadata_pillar2,pillar2_canonical_counts)
+pillar1 = merge(metadata_pillar1, pillar1_canonical_counts)
+pillar2 = merge(metadata_pillar2, pillar2_canonical_counts)
 
-all = rbind(pillar1,pillar2)
+all = rbind(pillar1, pillar2)
 
-all$sgRNA_HQ_LQ_ect=(all$sgRNA_HQ_count+all$sgRNA_LQ_count)/as.numeric(as.character(all$ect))
+all$sgRNA_HQ_LQ_ect = (all$sgRNA_HQ_count + all$sgRNA_LQ_count) / as.numeric(as.character(all$ect))
 
-total = all %>%group_by(sample,age,gender,collection_date,week,year,lineage,HOCI,HCW,protocol,mapped_reads,ect,rct,rlu) %>% dplyr::summarise(total=sum(as.numeric(sgRPTg_HQ)+as.numeric(sgRPTg_LQ)),total_g=sum(gRNA_count),total_raw_sgRNA=sum(sgRNA_HQ_count+sgRNA_LQ_count))
+total = all %>%
+  group_by(sample, age, gender, collection_date, week, year, lineage, HOCI, HCW, protocol, mapped_reads, ect, rct, rlu) %>%
+  dplyr::summarise(total = sum(as.numeric(sgRPTg_HQ) + as.numeric(sgRPTg_LQ)), total_g = sum(gRNA_count), total_raw_sgRNA = sum(sgRNA_HQ_count + sgRNA_LQ_count))
 ```
 
 # Figure 1
 
 ```{r fig.width=10,fig.height=12}
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B.1.1.7","B.1.1.7","Other")
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B.1.177","B.1.177",metadata_pillar1$class)
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B.1.1","B.1.1",metadata_pillar1$class)
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B.1","B.1",metadata_pillar1$class)
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B","B",metadata_pillar1$class)
-metadata_pillar1$class=ifelse(metadata_pillar1$lineage=="B.1.1.1","B.1.1.1",metadata_pillar1$class)
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B.1.1.7", "B.1.1.7", "Other")
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B.1.177", "B.1.177", metadata_pillar1$class)
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B.1.1", "B.1.1", metadata_pillar1$class)
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B.1", "B.1", metadata_pillar1$class)
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B", "B", metadata_pillar1$class)
+metadata_pillar1$class = ifelse(metadata_pillar1$lineage == "B.1.1.1", "B.1.1.1", metadata_pillar1$class)
 
-metadata_pillar1$week=ifelse(metadata_pillar1$year==53,2020,metadata_pillar1$week)
+metadata_pillar1$week = ifelse(metadata_pillar1$year == 53, 2020, metadata_pillar1$week)
 
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B.1.1.7", "B.1.1.7", "Other")
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B.1.177", "B.1.177", metadata_pillar2$class)
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B.1.1", "B.1.1", metadata_pillar2$class)
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B.1", "B.1", metadata_pillar2$class)
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B", "B", metadata_pillar2$class)
+metadata_pillar2$class = ifelse(metadata_pillar2$lineage == "B.1.1.1", "B.1.1.1", metadata_pillar2$class)
 
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B.1.1.7","B.1.1.7","Other")
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B.1.177","B.1.177",metadata_pillar2$class)
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B.1.1","B.1.1",metadata_pillar2$class)
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B.1","B.1",metadata_pillar2$class)
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B","B",metadata_pillar2$class)
-metadata_pillar2$class=ifelse(metadata_pillar2$lineage=="B.1.1.1","B.1.1.1",metadata_pillar2$class)
-
-b=ggplot(metadata_pillar2 %>% group_by(class) %>% summarise(n=n()),aes(fill=class,values=n))+
-  labs(subtitle = "Pillar 2")+
-  geom_waffle(n_rows = 20, size = 0.33, colour = "white", flip = TRUE)+
-  coord_equal()+
-  # theme_ipsum_rc(grid="") +
-  ft_theme()+
-  theme_enhance_waffle()+  
-  scale_fill_manual("Lineage",values=c(green,navy,purple,coral,aqua,grey))+
+b = ggplot(metadata_pillar2 %>%
+             group_by(class) %>%
+             summarise(n = n()),
+           aes(fill = class, values = n)) +
+  labs(subtitle = "Pillar 2") +
+  geom_waffle(
+    n_rows = 20,
+    size = 0.33,
+    colour = "white",
+    flip = TRUE
+  ) +
+  coord_equal() +
+  ft_theme() +
+  theme_enhance_waffle() +
+  scale_fill_manual("Lineage", values = c(green, navy, purple, coral, aqua, grey)) +
   theme(
     legend.position = "None",
-    plot.margin = margin(t=0, l=0.5, r=0.5, b=0, unit = "cm"),
+    plot.margin = margin(
+      t = 0,
+      l = 0.5,
+      r = 0.5,
+      b = 0,
+      unit = "cm"
+    ),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
   )
 
 
 
-a=ggplot(metadata_pillar1 %>% filter(is.na(week)==F),aes(year,fill=class))+
-    labs(subtitle = "Pillar 1")+
-    geom_bar(stat="count")+
-    ft_theme()+
-    scale_y_continuous("Number of Genomes",expand=c(0,0))+
-    scale_x_continuous("Week",expand=c(0,0))+
-    theme(
-        plot.margin = margin(t=0.5, l=1, r=0, b=1, unit = "cm"),
-        panel.background=element_rect(fill="grey97",color="white"),
-        strip.text.x = element_text(face = "bold",colour = '#4D4845'),
-        panel.grid.major.y = element_blank(),
-        legend.position = "bottom",
-        legend.margin=margin(t = 0.5,b=0, unit='cm')
-    )+
-    facet_grid(~week,space="free",scales="free")+
-    scale_fill_manual("Lineage",values=c(yellow,green,navy,purple,coral,aqua,grey))+
+a = ggplot(metadata_pillar1 %>% filter(is.na(week) == F), aes(year, fill =
+  class)) +
+  labs(subtitle = "Pillar 1") +
+  geom_bar(stat = "count") +
+  ft_theme() +
+  scale_y_continuous("Number of Genomes", expand = c(0, 0)) +
+  scale_x_continuous("Week", expand = c(0, 0)) +
+  theme(
+    plot.margin = margin(
+      t = 0.5,
+      l = 1,
+      r = 0,
+      b = 1,
+      unit = "cm"
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    panel.grid.major.y = element_blank(),
+    legend.position = "bottom",
+    legend.margin = margin(t = 0.5, b = 0, unit = 'cm')
+  ) +
+  facet_grid(~week, space = "free", scales = "free") +
+  scale_fill_manual("Lineage",
+                    values = c(yellow, green, navy, purple, coral, aqua, grey)) +
   guides(fill = guide_legend(nrow = 1))
 
 
 
 require(ggbeeswarm)
 
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7","P.2")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7", "P.2")
 all$orf <- factor(all$orf, levels = c("S", "E", "M", "N", "ORF6"))
 all$lineage <- factor(all$lineage, levels = popular)
 
-setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
-img1 <- readPNG("images/pillar testing.png")
-
-flow = ggplot() + 
-    background_image(img1) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0.5, l=2, r=2, b=0.5, unit = "cm"))
-
-popular = c("B","B.1","B.1.177")
+setwd(
+  '/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files'
+)
 
 
-all$total = all$sgRPTg_HQ+all$sgRPTg_LQ
-flow = ggplot() + 
-    background_image(img1) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0.5, l=0, r=0, b=0.5, unit = "cm"))
+popular = c("B", "B.1", "B.1.177")
 
-img2 <- readPNG("images/trs.png")
 
-reads = ggplot() + 
-    background_image(img2) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0, l=0, r=0, b=0, unit = "cm"))
-
-popular = c("B","B.1","B.1.177")
+all$total = all$sgRPTg_HQ + all$sgRPTg_LQ
 
 stat.test <- all %>%
-  filter(pillar=="Pillar 2") %>%
-    filter(is.na(orf) == F) %>%
-    group_by(orf) %>%
-    wilcox_test(total~lineage,comparisons=list(c("B.1.1.7","B.1.177")),paired = FALSE) %>%
-    adjust_pvalue(method = "holm") %>%
-  
-    mutate(y.position = 100)
+  filter(pillar == "Pillar 2") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
 stat.test
 
 
-d=ggplot(all %>% filter(pillar=="Pillar 2") %>% filter(orf!="NA") %>% filter(lineage %in% c("B.1.177","B.1.1.7")),aes(lineage,total,color=lineage))+
+
+d = ggplot(
+  all %>%
+    filter(pillar == "Pillar 2") %>%
+    filter(orf != "NA") %>%
+    filter(lineage %in% c("B.1.177", "B.1.1.7")),
+  aes(lineage, total, color = lineage)
+) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  labs(subtitle = "Pillar 2")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-
- geom_bracket(data=stat.test,aes(xmin=group1,xmax=group2),y.position=log10(60000),color="#4D4845")+
-
- 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 2") +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(60000),
+    color = "#4D4845"
+  ) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(
+    expression(bold(
+      paste("sgRNA Reads/1000 Genomic (log"["10"], ")")
+    )),
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100, 1000, 10000),
+    expand = c(0, 0),
+    limits = c(0, 150000)
+  ) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-     plot.margin = margin(0.5,1,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))
+    plot.margin = margin(0.5, 1, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
 stat.test <- all %>%
-  filter(pillar=="Pillar 1") %>%
-    filter(is.na(orf) == F) %>%
-    group_by(orf) %>%
-    wilcox_test(total~lineage,comparisons=list(c("B.1.1.7","B.1.177")),paired = FALSE) %>%
-    adjust_pvalue(method = "holm") %>%
-  
-    mutate(y.position = 100)
+  filter(pillar == "Pillar 1") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
 stat.test
 
+ all %>%
+  filter(pillar == "Pillar 1") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+wilcox_effsize(total ~ lineage, comparisons =  list(c("B.1.1.7", "B.1.177")), paired = FALSE)
 
-c=ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lineage %in% c("B.1.177","B.1.1.7")),aes(lineage,total,color=lineage))+
-# geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  labs(subtitle = "Pillar 1")+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-geom_bracket(data=stat.test,aes(xmin=group1,xmax=group2),y.position=log10(60000),color="#4D4845")+
+c = ggplot(
+  all %>%
+    filter(pillar == "Pillar 1") %>%
+    filter(orf != "NA") %>%
+    filter(lineage %in% c("B.1.177", "B.1.1.7")),
+  aes(lineage, total, color = lineage)
+) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 1") +
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(60000),
+    color = "#4D4845"
+  ) +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(
+    expression(bold(
+      paste("sgRNA Reads/1000 Genomic (log"["10"], ")")
+    )),
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100, 1000, 10000),
+    expand = c(0, 0),
+    limits = c(0, 150000)
+  ) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(0.5,1,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))
+    plot.margin = margin(0.5, 1, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7","P.2")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7", "P.2")
 
 
-ect_plot = metadata_pillar1 %>% filter(lineage %in% c("B.1.177","B.1.1.7")) %>% filter(ect != "None") %>% filter(ect != "") %>% mutate(ect=as.numeric(as.character(ect)))
+ect_plot = metadata_pillar1 %>%
+  filter(lineage %in% c("B.1.177", "B.1.1.7")) %>%
+  filter(ect != "None") %>%
+  filter(ect != "") %>%
+  mutate(ect =
+           as.numeric(as.character(ect)))
 
-ect_plot$lineage <- factor(ect_plot$lineage, levels =  c("B.1.177","B.1.1.7"))    
+ect_plot$lineage <-
+  factor(ect_plot$lineage, levels = c("B.1.177", "B.1.1.7"))
 
-stat.test = compare_means (ect~lineage,data=ect_plot
-    ,method="wilcox.test",paired = F)
+stat.test = compare_means(ect ~ lineage,
+                          data = ect_plot
+  ,
+                          method = "wilcox.test",
+                          paired = F)
 
-ect = ggplot(ect_plot,aes(lineage,as.numeric(as.character(ect)),color=lineage))+
-  
-   geom_violin()+
-  ft_theme()+
-  geom_beeswarm(size=2,alpha=0.1)+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+ect = ggplot(ect_plot, aes(lineage, as.numeric(as.character(ect)), color =
+  lineage)) +
+
+  geom_violin() +
+  ft_theme() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-     plot.margin = margin(0.5,0.5,0,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))+
-  scale_y_continuous("ECT",limits=c(12,45))+
-  scale_x_discrete("PANGO Lineage")+
-  geom_bracket(data=stat.test,aes(xmin=group2,xmax=group1,label=p.signif),inherit.aes = F,y.position=40,color="#4D4845",sort.val ="none")
+    plot.margin = margin(0.5, 0.5, 0, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral)) +
+  scale_y_continuous("ECT", limits = c(12, 45)) +
+  scale_x_discrete("PANGO Lineage") +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group2, xmax = group1, label = p.signif),
+    inherit.aes = F,
+    y.position = 40,
+    color = "#4D4845",
+    sort.val = "none"
+  )
 
 
-rlu_plot = metadata_pillar1 %>% filter(lineage %in% c("B.1.177","B.1.1.7")) %>% filter(rlu != "None") %>% filter(rlu != "") %>% mutate(rlu=as.numeric(as.character(rlu)))
+rlu_plot = metadata_pillar1 %>%
+  filter(lineage %in% c("B.1.177", "B.1.1.7")) %>%
+  filter(rlu != "None") %>%
+  filter(rlu != "") %>%
+  mutate(rlu =
+           as.numeric(as.character(rlu)))
 
-rlu_plot$lineage <- factor(rlu_plot$lineage, levels =  c("B.1.177","B.1.1.7"))    
+rlu_plot$lineage <-
+  factor(rlu_plot$lineage, levels = c("B.1.177", "B.1.1.7"))
 
-stat.test = compare_means (rlu~lineage,data=rlu_plot
-    ,method="wilcox.test",paired = F)
+stat.test = compare_means(rlu ~ lineage,
+                          data = rlu_plot,
+                          method = "wilcox.test",
+                          paired = F)
 
 
 
-
-rlu =ggplot(rlu_plot,aes(lineage,as.numeric(as.character(rlu)),color=lineage))+
-
-   geom_violin()+
-  ft_theme()+
-  geom_beeswarm(size=2,alpha=0.1)+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+rlu = ggplot(rlu_plot, aes(lineage, as.numeric(as.character(rlu)), color =
+  lineage)) +
+  geom_violin() +
+  ft_theme() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
     panel.grid.major.x = element_blank(),
-     plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))+
-  scale_y_continuous("RLU",limits=c(800,1450))+
-  scale_x_discrete("PANGO Lineage")+
-  geom_bracket(data=stat.test,aes(xmin=group2,xmax=group1,label=p.signif),inherit.aes = F,y.position=1350,color="#4D4845",sort.val ="none")
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral)) +
+  scale_y_continuous("RLU", limits = c(800, 1450)) +
+  scale_x_discrete("PANGO Lineage") +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group2, xmax = group1, label = p.signif),
+    inherit.aes = F,
+    y.position = 1350,
+    color = "#4D4845",
+    sort.val = "none"
+  )
 
 total$lineage <- factor(total$lineage, levels = popular)
-e = ggplot(total%>%filter(lineage %in% c("B.1.1.7","B.1.177")),aes(as.numeric(as.character(ect)),total_raw_sgRNA,color=lineage))+
-  geom_point()+
-  facet_grid(~lineage)+
-  geom_smooth(method = "lm")+
-   stat_cor(method = "pearson",color='#4D4845')+
-   ft_theme()+
+e = ggplot(total %>% filter(lineage %in% c("B.1.1.7", "B.1.177")),
+           aes(as.numeric(as.character(ect)), total_raw_sgRNA, color = lineage)) +
+  geom_point() +
+  facet_grid(~lineage) +
+  geom_smooth(method = "lm") +
+  stat_cor(method = "pearson", color = '#4D4845') +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-  )+
-  scale_y_continuous("Total Raw\nsgRNA (HQ+LQ)")+
-  scale_x_continuous("E Cycle Threshold")+
-  scale_color_manual("Lineage",values=c(aqua,coral))
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_y_continuous("Total Raw\nsgRNA (HQ+LQ)") +
+  scale_x_continuous("E Cycle Threshold") +
+  scale_color_manual("Lineage", values = c(aqua, coral))
 
-e2 = ggplot(total%>%filter(lineage %in% c("B.1.1.7","B.1.177")),aes(as.numeric(as.character(ect)),total_g,color=lineage))+
-  geom_point()+
-  facet_grid(~lineage)+
-   geom_smooth(method = "lm")+
-   stat_cor(method = "pearson",color='#4D4845')+
-   ft_theme()+
+e2 = ggplot(total %>% filter(lineage %in% c("B.1.1.7", "B.1.177")),
+            aes(as.numeric(as.character(ect)), total_g, color = lineage)) +
+  geom_point() +
+  facet_grid(~lineage) +
+  geom_smooth(method = "lm") +
+  stat_cor(method = "pearson", color = '#4D4845') +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-  )+
-  scale_y_continuous("Total Raw gRNA")+
-  scale_x_continuous("E Cycle Threshold")+
-  scale_color_manual("Lineage",values=c(aqua,coral))
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_y_continuous("Total Raw gRNA") +
+  scale_x_continuous("E Cycle Threshold") +
+  scale_color_manual("Lineage", values = c(aqua, coral))
 
 
 stat.test <- all %>%
-    filter(is.na(orf) == F) %>%
-    group_by(orf) %>%
-    wilcox_test(sgRNA_HQ_LQ_ect~lineage,comparisons=list(c("B.1.1.7","B.1.177"))) %>%
-    adjust_pvalue(method = "bonferroni") %>%
-    mutate(y.position = 100)
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_test(sgRNA_HQ_LQ_ect ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177"))) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  mutate(y.position = 100)
 stat.test
 
 
-f = ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lineage %in% c("B.1.177","B.1.1.7")) %>% filter(is.na(sgRNA_HQ_LQ_ect)==F),aes(lineage,sgRNA_HQ_LQ_ect,color=lineage))+
-# geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  geom_bracket(data=stat.test,aes(xmin=group1,xmax=group2),y.position=log10(500),color="#4D4845")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+f = ggplot(
+  all %>%
+    filter(pillar == "Pillar 1") %>%
+    filter(orf != "NA") %>%
+    filter(lineage %in% c("B.1.177", "B.1.1.7")) %>%
+    filter(is.na(sgRNA_HQ_LQ_ect) ==
+             F),
+  aes(lineage, sgRNA_HQ_LQ_ect, color = lineage)
+) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(500),
+    color = "#4D4845"
+  ) +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
 
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/ECT (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000),expand=c(0,0),limits=c(0,1000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(
+    expression(bold(paste(
+      "sgRNA Reads/ECT (log"["10"], ")"
+    ))),
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100, 1000),
+    expand = c(0, 0),
+    limits = c(0, 1000)
+  ) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
 
-top = ggarrange(a,b,labels=c("A","B"),widths = c(1,0.25))
-middle_right=ggarrange(ect,rlu,labels=c("E","F"),heights =  c(0.5,0.5),nrow=2)
-middle = ggarrange(c,d,middle_right,labels=c("C","D",""),widths = c(0.5,0.5,0.3),nrow=1)
-bottom_left = ggarrange(e,e2,labels=c("G","H"),nrow=2)
-bottom = ggarrange(bottom_left,f,labels=c("","I"),nrow=1,widths = c(1,0.7))
+top = ggarrange(a, b, labels = c("A", "B"), widths = c(1, 0.25))
+middle_right = ggarrange(
+  ect,
+  rlu,
+  labels = c("E", "F"),
+  heights = c(0.5, 0.5),
+  nrow = 2
+)
+middle = ggarrange(
+  c,
+  d,
+  middle_right,
+  labels = c("C", "D", ""),
+  widths = c(0.5, 0.5, 0.3),
+  nrow = 1
+)
+bottom_left = ggarrange(e, e2, labels = c("G", "H"), nrow = 2)
+bottom = ggarrange(
+  bottom_left,
+  f,
+  labels = c("", "I"),
+  nrow = 1,
+  widths = c(1, 0.7)
+)
 
-ggarrange(top,middle,bottom,nrow=3,heights=c(0.8,1,1))
+ggarrange(top,
+          middle,
+          bottom,
+          nrow = 3,
+          heights = c(0.8, 1, 1))
 
 ```
+
+
+# Figure 2
+
+```{r fig.width=10,fig.height=12}
+
+stat.test <- all %>%
+  filter(pillar == "Pillar 1") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B", "B.1"),c("B.1", "B.1.1"),c("B.1.1", "B.1.1.7")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
+
+ a = ggplot(all %>%
+             filter(pillar == "Pillar 1") %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% c("B","B.1","B.1.1","B.1.1.7")), aes(lineage, total, color = lineage)) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  # geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_jitter(alpha=0.05,height=0)+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+
+ geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(60000),
+    color = "#4D4845",
+    step.increase = 0.05,
+    step.group.by = "orf"
+  ) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 700000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "None",
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_color_manual(values = c(yellow, green, navy, coral))
+ 
+ 
+ 
+stat.test <- all %>%
+  filter(pillar == "Pillar 1") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B", "B.1"),c("B.1", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
+
+ b = ggplot(all %>%
+             filter(pillar == "Pillar 1") %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% c("B", "B.1", "B.1.177")), aes(lineage, total, color = lineage)) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+   # geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_jitter(alpha=0.05,height=0)+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+
+ geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(60000),
+    color = "#4D4845",
+    step.increase = 0.05,
+    step.group.by = "orf"
+  ) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 700000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "None",
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_color_manual(values = c(yellow, green, aqua))
+
+ 
+ 
+ 
+ 
+ setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
+
+days = read.table("patient_hoci_staff_merged.csv",sep=",",header=T)
+ 
+ require(ggridges)
+days=merge(metadata_pillar1,days,by.y="external_id",by.x="sample")
+days_density = ggplot(days %>%
+         filter(lineage %in% c("B", "B.1", "B.1.1", "B.1.1.7", "B.1.177")) %>%
+         group_by(sample, lineage, Day_of_symptoms) %>%
+         filter(Day_of_symptoms >= 0) %>% 
+         summarise(), aes(y = lineage, x = Day_of_symptoms, color = lineage, fill = lineage)) +
+  geom_density_ridges(alpha = 0.7, jittered_points = TRUE, position = "raincloud",
+                      scale = 0.9, point_alpha = 0.1) +
+  coord_cartesian(xlim = c(-1, 20)) +
+  scale_color_manual(values = c(yellow, green, navy, coral, aqua)) +
+  scale_fill_manual(values = c(yellow, green, navy, coral, aqua)) +
+  ft_theme() +
+  geom_label(data=days %>% filter(is.na(Day_of_symptoms)==F) %>% group_by(lineage) %>% summarise(n=n()) %>% filter(lineage %in% c("B.1.1","B.1","B","B.1.1.7","B.1.177")),aes(y=lineage,x=17,label=paste("n = ",n)),fill="white")+
+  theme(
+    legend.position = "None"
+  ) +
+  scale_x_continuous("Days Since Symptom Onset") +
+  scale_y_discrete("PANGO Lineage")
+
+ 
+ 
+ 
+
+
+for_model = merge(days,pillar1) %>% 
+  filter(orf == "S") %>%
+  filter(is.na(Day_of_symptoms)==F) %>% 
+  filter(lineage %in% c("B.1","B.1.1","B.1.1.7","B.1.177")) %>%
+  # filter(lineage %in% c("B.1","B.1.177")) %>%
+  filter(Day_of_symptoms<=20)%>%
+  filter(Day_of_symptoms>=-5)
+model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model)
+# model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage, data=for_model)
+
+summary(model)
+
+effect_s = plot_summs(summ(model), scale = TRUE, color.class=c(coral))+
+  ft_theme()+
+  labs(subtitle = "S")+
+  theme(
+    
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+
+  scale_y_discrete("")
+
+
+for_model = merge(days,pillar1) %>% 
+  filter(orf == "E") %>%
+  filter(is.na(Day_of_symptoms)==F) %>% 
+  filter(lineage %in% c("B.1","B.1.1","B.1.1.7","B.1.177")) %>%
+  # filter(lineage %in% c("B.1","B.1.177")) %>%
+  filter(Day_of_symptoms<=20)%>%
+  filter(Day_of_symptoms>=-5)
+model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model)
+# model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage, data=for_model)
+
+summary(model)
+
+effect_e = plot_summs(summ(model), scale = TRUE, color.class=c(coral))+
+  ft_theme()+
+  labs(subtitle = "E")+
+  theme(
+    
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_y_discrete("")
+
+for_model = merge(days,pillar1) %>% 
+  filter(orf == "M") %>%
+  filter(is.na(Day_of_symptoms)==F) %>% 
+  filter(lineage %in% c("B.1","B.1.1","B.1.1.7","B.1.177")) %>%
+  # filter(lineage %in% c("B.1","B.1.177")) %>%
+  filter(Day_of_symptoms<=20)%>%
+  filter(Day_of_symptoms>=-5)
+model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model)
+# model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage, data=for_model)
+
+summary(model)
+
+effect_m = plot_summs(summ(model), scale = TRUE, color.class=c(coral))+
+  ft_theme()+
+  labs(subtitle = "M")+
+  theme(
+    
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_y_discrete("")
+
+for_model = merge(days,pillar1) %>% 
+  filter(orf == "N") %>%
+  filter(sample!="SHEF-CC370") %>%
+  filter(is.na(Day_of_symptoms)==F) %>% 
+  filter(lineage %in% c("B.1","B.1.1","B.1.1.7","B.1.177")) %>%
+  # filter(lineage %in% c("B.1","B.1.177")) %>%
+  filter(Day_of_symptoms<=20)%>%
+  filter(Day_of_symptoms>=-5)
+model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model)
+# model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage, data=for_model)
+
+summary(model)
+
+effect_n = plot_summs(summ(model), scale = TRUE, color.class=c(coral))+
+  ft_theme()+
+  labs(subtitle = "N")+
+  theme(
+    
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_y_discrete("")
+
+
+for_model = merge(days,pillar1) %>% 
+  filter(orf == "ORF6") %>%
+  filter(is.na(Day_of_symptoms)==F) %>% 
+  filter(lineage %in% c("B.1","B.1.1","B.1.1.7","B.1.177")) %>%
+  # filter(lineage %in% c("B.1","B.1.177")) %>%
+  filter(Day_of_symptoms<=20)%>%
+  filter(Day_of_symptoms>=-5)
+model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model)
+# model=lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage, data=for_model)
+
+summary(model)
+
+effect_orf6 = plot_summs(summ(model), scale = TRUE, color.class=c(coral))+
+  ft_theme()+
+  labs(subtitle = "ORF6")+
+  theme(
+    
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    plot.margin = margin(0.2, 0.2, 0.2, 0.2, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_y_discrete("")
+
+days_pillar1 = merge(days,pillar1)
+days_pillar1$orf <- factor(days_pillar1$orf, levels = c("S", "E", "M", "N", "ORF6"))
+days_pillar1$lineage <- factor(days_pillar1$lineage, levels = c("B.1.177", "B.1.1.7"))
+time_course=ggplot(days_pillar1%>%filter(lineage %in% c("B.1.177","B.1.1.7"))%>% filter(is.na(lineage)==F)%>%filter(sgRPTg_HQ+sgRPTg_LQ < 20000) %>% filter(orf %in% c("S","N","M","E","ORF6")),aes(Day_of_symptoms,sgRPTg_HQ+sgRPTg_LQ,color=lineage))+
+  geom_jitter(alpha=0.05)+
+  facet_wrap(~orf,scales = "free",ncol=5)+
+  coord_cartesian(xlim = c(0,10))+ scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10),breaks=c(0,10,100,1000,10000),expand=c(0,0))+
+  geom_smooth(fill="white")+
+  scale_color_manual("Lineage",values=c(aqua,coral))+ft_theme()+theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "bottom",
+    panel.grid.major.y = element_blank()
+) +
+  scale_x_continuous("Days Since Symptom Onset",breaks=c(0,2,4,6,8,10))
+
+top=ggarrange(a,b,labels=c("A","B"),nrow=1)
+right=ggarrange(effect_s,effect_e,effect_m,effect_n,effect_orf6,labels=c("D","","","",""),nrow=3,ncol=2)
+middle=ggarrange(days_density,right,labels=c("C",""),nrow=1,widths=c(0.8,1))
+
+ggarrange(top,middle,time_course,labels=c("","","E"),nrow=3,heights=c(0.8,1,1))
+```
+
+
+# Figure 3
+```{r fig.width=10,fig.height=12}
+
+
+ 
+ setwd('/home/md1mpar/Documents/projects/periscope/elephants')
+counts = read.table("shef_novel_counts.csv", header = T, sep = ",")
+lineages = read.table("shef_lineages.lst", header = T, sep = "\t")
+all = merge(counts, lineages)
+novel_shef = all
+novel_shef = novel_shef %>% separate(orf, c("novel", "pos"), sep = "_")
+novel_shef$pos = as.numeric(as.character(novel_shef$pos))
+novel_shef$location = "SHEF"
+novel_shef$y = ifelse(novel_shef$lineage == "B.1.1.7", -0.05, 0.05)
+
+
+novel = novel_shef %>% filter(pos > 50)
+novel$start = 50
+
+summary = novel %>%
+  mutate(total = (as.numeric(as.character(nsgRNA_HQ_count)) + as.numeric(as.character(nsgRNA_LQ_count)))) %>%
+  group_by(start, y, lineage, pos) %>%
+  summarise(n = n(), m = sum(total))
+
+full = ggplot(mapping = aes(x = start, y = y, xend = pos, yend = y)) +
+  geom_curve(data = summary %>%
+    filter(lineage == "B.1.177") %>%
+    filter(n > 5), lineend = "round", curvature = -0.3, color = grey, size = 0.1) +
+  geom_curve(data = summary %>%
+    filter(lineage == "B.1.1.7") %>%
+    filter(n > 5), lineend = "round", curvature = 0.3, color = grey, size = 0.1) +
+  scale_alpha_continuous("Number of Samples") +
+  ft_theme() +
+  scale_x_continuous("Position") +
+  annotate(geom = "rect", xmin = 0, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey80", fill = "grey80") +
+  annotate(geom = "rect", xmin = 0, xmax = 200, ymin = -0.05, ymax = 0.05, color = "grey30", fill = "grey30") +
+  annotate(geom = "rect", xmin = 200, xmax = 13483, ymin = -0.05, ymax = 0.05, color = "grey50", fill = "grey50") +
+  annotate(geom = "text", x = 7000, y = 0, color = "white", label = "ORF1a", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 13483, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey60", fill = "grey60") +
+  annotate(geom = "text", x = 17000, y = 0, color = "white", label = "ORF1b", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 21532, xmax = 30000, ymin = -0.05, ymax = 0.05, color = navy, fill = navy) +
+  annotate(geom = "text", x = 23500, y = 0, color = "white", label = "S", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 25361, xmax = 30000, ymin = -0.05, ymax = 0.05, color = coral, fill = coral) +
+  annotate(geom = "text", x = 25750, y = 0, color = "white", label = "3a", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 26213, xmax = 30000, ymin = -0.05, ymax = 0.05, color = green, fill = green) +
+  annotate(geom = "rect", xmin = 26449, xmax = 30000, ymin = -0.05, ymax = 0.05, color = purple, fill = purple) +
+  annotate(geom = "text", x = 26700, y = 0, color = "white", label = "M", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 27017, xmax = 30000, ymin = -0.05, ymax = 0.05, color = yellow, fill = yellow) +
+  annotate(geom = "rect", xmin = 27364, xmax = 30000, ymin = -0.05, ymax = 0.05, color = orange, fill = orange) +
+  annotate(geom = "rect", xmin = 27864, xmax = 30000, ymin = -0.05, ymax = 0.05, color = grey, fill = grey) +
+  annotate(geom = "rect", xmin = 28235, xmax = 30000, ymin = -0.05, ymax = 0.05, color = aqua, fill = aqua) +
+  annotate(geom = "text", x = 28800, y = 0, color = "white", label = "N", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 29510, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey80", fill = "grey80") +
+  annotate(geom = "rect", xmin = 0, xmax = 30000, ymin = -0.05, ymax = 0.05, fill = "white", alpha = 0.3) +
+  geom_point(alpha = 0.8, data = summary %>%
+    filter(lineage == "B.1.177") %>%
+    filter(n > 5) %>%
+    arrange(n), aes(x = pos, y = 0.05, size = m, color = n)) +
+  geom_point(alpha = 0.8, data = summary %>%
+    filter(lineage == "B.1.1.7") %>%
+    filter(n > 5), aes(x = pos, y = -0.05, size = m, color = n)) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    axis.line.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "right",
+    legend.justification = "center",
+    legend.direction = "vertical",
+    legend.key.size = unit(0.5, "cm"),
+    legend.key.height = unit(0.3, "cm"),
+  ) +
+  scale_color_gradient("Number of\nSamples", low = navy, high = coral) +
+  annotate(geom = "text", label = "B.1.177", fontface = 'bold', x = 1000, y = 0.5, color = "#4D4845", hjust = 0) +
+  annotate(geom = "text", label = "B.1.1.7", fontface = 'bold', x = 1000, y = -0.5, color = "#4D4845", hjust = 0) +
+  scale_size_continuous("Number of\nReads")
+full
+
+zoom = full +
+  coord_cartesian(xlim = c(22000, 30000), ylim = c(-0.2, 0.2)) +
+  annotate(geom = "text", x = 26330, y = 0, color = "white", label = "E", fontface = 'bold') +
+  annotate(geom = "text", x = 27170, y = 0, color = "white", label = "6", fontface = 'bold') +
+  annotate(geom = "text", x = 27600, y = 0, color = "white", label = "7a", fontface = 'bold') +
+  annotate(geom = "text", x = 28010, y = 0, color = "white", label = "8", fontface = 'bold') +
+  annotate(geom = "text", x = 29750, y = 0, color = "white", label = "10", fontface = 'bold') +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    panel.background = element_rect(colour = "#4D4845"),
+    plot.title = element_text(size = 10, colour = "#4D4845")
+  ) +
+  ggtitle("Zoom 22000-30000")
+
+
+novel$color = ifelse(novel$lineage == "B.1.1.7", "B.1.1.7", "Other")
+
+# ggplot(novel %>% filter(pos > 28250) %>% filter(pos < 28310), aes(pos, nsgRPTg_HQ + nsgRPTg_LQ, fill = color)) +
+#   geom_bar(stat = "identity") +
+#   ft_theme() +
+#   scale_fill_manual("Lineage", values = c(coral, grey)) +
+#   scale_y_continuous("Sum of ngRPTg (HQ+LQ)") +
+#   scale_x_continuous("Position")
+
+
+
+
+
+zoom_more = full +  coord_cartesian(xlim=c(28260,28300),ylim=c(-0.2,0.2))+
+  theme(
+    legend.position="none",
+    axis.title.x = element_blank(),
+    panel.background = element_rect(colour="#4D4845"),
+    plot.title = element_text(size=10,colour="#4D4845")
+  )+
+  annotate(geom = "text",label="A",x=28260,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28261,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28262,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28263,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28264,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28265,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28266,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28267,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28268,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28269,y=0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28270,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28271,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28272,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28273,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28274,y=0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="T",x=28275,y=0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="G",x=28276,y=0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="T",x=28277,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28278,y=0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28279,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28280,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28281,y=0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28282,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28283,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28284,y=0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28285,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28286,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28287,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28288,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28289,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28290,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28291,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28292,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28293,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28294,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28295,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28296,y=0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28297,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28298,y=0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28299,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28300,y=0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28301,y=0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28302,y=0.1,hjust=0)+
+  
+  annotate(geom = "text",label="M",x=28275,y=0.17,hjust=0,fontface=2,color=green)+
+  annotate(geom = "text",label="S",x=28278,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="D",x=28281,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="N",x=28284,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="G",x=28287,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="P",x=28290,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="Q",x=28293,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="N",x=28296,y=0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="Q",x=28299,y=0.17,hjust=0,fontface=2)+
+  
+  annotate(geom = "text",label="M",x=28285,y=-0.17,hjust=0,fontface=2,color=green)+
+  annotate(geom = "text",label="D",x=28288,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="P",x=28291,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="K",x=28294,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="I",x=28297,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="S",x=28300,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="E",x=28303,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="M",x=28306,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="H",x=28309,y=-0.17,hjust=0,fontface=2)+
+  annotate(geom = "text",label="B.1.177",x=28260,y=0.17,hjust=0, fontface =2)+
+  annotate(geom = "text",label="B.1.1.7",x=28260,y=-0.17,hjust=0, fontface =2)+
+  annotate(geom = "label",label="N",x=28270,y=0.17,hjust=0, fontface =2)+
+  annotate(geom = "label",label="9b",x=28280,y=-0.17,hjust=0, fontface =2)+
+  annotate(geom = "text",label="A",x=28260,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28261,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28262,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28263,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28264,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28265,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28266,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28267,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28268,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28269,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28270,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28271,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28272,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28273,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28274,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28275,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28276,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28277,y=-0.1,hjust=0)+
+    annotate(geom = "text",label="C",x=28278,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28279,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28280,y=-0.1,hjust=0,color=coral)+
+  annotate(geom = "text",label="T",x=28281,y=-0.1,hjust=0,color=coral)+
+  annotate(geom = "text",label="A",x=28282,y=-0.1,hjust=0,color=coral)+
+  annotate(geom = "text",label="A",x=28283,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28284,y=-0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="T",x=28285,y=-0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="G",x=28286,y=-0.1,hjust=0,color=green)+
+  annotate(geom = "text",label="G",x=28287,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28288,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28289,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28290,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28291,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28292,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28293,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28294,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28295,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28296,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="T",x=28297,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28298,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="A",x=28299,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28300,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="C",x=28301,y=-0.1,hjust=0)+
+  annotate(geom = "text",label="G",x=28302,y=-0.1,hjust=0)
+
+novel$color <- factor(novel$color, levels = c("Other","B.1.1.7"))
+ncount = ggplot(novel %>% filter(pos > 28255) %>% filter(pos <= 28290), aes(pos, nsgRPTg_HQ + nsgRPTg_LQ, group=pos,color = color)) +
+  annotate(geom="rect",xmin=28275.5,xmax=28276.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28277.5,xmax=28278.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28279.5,xmax=28280.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28281.5,xmax=28282.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28283.5,xmax=28284.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28285.5,xmax=28286.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28287.5,xmax=28288.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  annotate(geom="rect",xmin=28289.5,xmax=28290.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  # annotate(geom="rect",xmin=28291.5,xmax=28292.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  # annotate(geom="rect",xmin=28293.5,xmax=28294.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  # annotate(geom="rect",xmin=28295.5,xmax=28296.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  # annotate(geom="rect",xmin=28297.5,xmax=28298.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  # annotate(geom="rect",xmin=28299.5,xmax=28300.5,ymin=0,ymax=110,fill="#f2ebe6")+
+  geom_jitter(height = 0,alpha=0.5) +
+  ft_theme() +
+  scale_color_manual("Lineage", values = c(grey, coral)) +
+  scale_y_continuous("Sum of ngRPTg (HQ+LQ)",expand=c(0,0),limits=c(0,110)) +
+  scale_x_continuous("Position",expand=c(0,0))+
+  
+  theme(
+    legend.position = "None",
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    panel.grid.major.y = element_blank()
+  )+
+  facet_wrap(~color,nrow=2)
+
+novel$total=novel$nsgRPTg_HQ + novel$nsgRPTg_LQ
+stat.test = compare_means(total ~ color,
+                          data = novel %>% filter(pos == 28282) ,
+                          method = "wilcox.test",
+                          paired = F)
+
+
+
+novel %>% filter(pos == 28282) %>%
+  wilcox_effsize(total ~ color, comparisons = list(c("Other", "B.1.1.7")), paired = FALSE)
+
+
+orf9b_box=ggplot(novel %>% filter(pos == 28282) , aes(color, nsgRPTg_HQ + nsgRPTg_LQ, ,color = color)) +
+  geom_violin(scale="width") +
+  geom_jitter(height=0,size = 2, alpha = 0.1) +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  ft_theme()+
+  theme(
+    legend.position = "None",
+     panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    
+    panel.grid.major.y = element_blank(),
+    plot.margin = margin(1, 0.5, 0.5, 1, "cm"),
+    axis.text.x=element_text(angle=45,vjust=1,hjust=1)
+  )+
+  scale_color_manual(values=c(grey,coral))+
+  scale_x_discrete("PANGO Lineage")+
+  scale_y_continuous(
+    expression(bold(
+      paste("Total 28282 (ORF9b)\nnsgRNA (log"["10"],")")
+    )),
+    # trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100, 1000),
+    expand = c(0, 0),
+    limits = c(0, 200)
+  ) +
+  # scale_y_continuous("Total Normalised\n28282 Noncanonical sgRNA",limits=c(0,120))+
+   geom_bracket(
+    data = stat.test,
+    aes(xmin = group2, xmax = group1, label = p.signif),
+    inherit.aes = F,
+    y.position = log10(110),
+    color = "#4D4845",
+    sort.val = "none"
+  )
+ setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
+img1 <- readPNG("images/full_model.png")
+mutation = ggplot() +
+  background_image(img1) +
+  # This ensures that the image leaves some space at the edges
+  theme(plot.margin = margin(t = 0.5, l = 2, r = 2, b = 0.5, unit = "cm"))
+
+ bottom=ggarrange(ncount,orf9b_box,zoom_more,labels=c("B","C","D"),widths=c(0.5,0.3,0.8),nrow=1)
+ ggarrange(full,bottom,mutation,labels=c("A","","E"),nrow=3,heights = c(0.9,0.6,1))
+
+```
+
+Other ORFs
+
+```{r}
+# RELOAD DATA
+setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
+
+pillar1_canonical_counts = read.table("supplementary_file_2_pillar_1_canonical_counts.csv", header = T, sep = ",")
+pillar2_canonical_counts = read.table("supplementary_file_3_pillar_2_canonical_counts.csv", header = T, sep = ",")
+
+nrow(pillar1_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+nrow(pillar2_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+
+pillar1_canonical_counts = pillar1_canonical_counts %>%
+  filter(mapped_reads >= 50000) %>%
+  filter(orf != "ORF1a")
+pillar2_canonical_counts = pillar2_canonical_counts %>%
+  filter(mapped_reads >= 50000) %>%
+  filter(orf != "ORF1a")
+
+nrow(pillar1_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+nrow(pillar2_canonical_counts %>%
+       group_by(sample) %>%
+       dplyr::summarise())
+
+pillar1_canonical_counts$pillar = "Pillar 1"
+pillar2_canonical_counts$pillar = "Pillar 2"
+
+metadata_pillar1 = read.table("supplementary_file_1_metadata.csv", header = T, sep = ",")
+metadata_pillar2 = read.table("supplementary_table_5_pillar_2_metadata.csv", header = T, sep = ",")
+
+
+
+clinical = read.table("supplementary_file_4_clnical_data.csv", header = T, sep = ",")
+
+clinical$days_since_symptom_onset = as.Date(clinical$DiagnosisDTC, format = "%d/%m/%Y") - as.Date(clinical$DateOfOnset, format = "%d/%m/%Y")
+
+
+# all = merge(metadata,clinical,by.x="sample",by.y="external_id")
+pillar1 = merge(metadata_pillar1, pillar1_canonical_counts)
+pillar2 = merge(metadata_pillar2, pillar2_canonical_counts)
+
+all = rbind(pillar1, pillar2)
+
+all$sgRNA_HQ_LQ_ect = (all$sgRNA_HQ_count + all$sgRNA_LQ_count) / as.numeric(as.character(all$ect))
+
+total = all %>%
+  group_by(sample, age, gender, collection_date, week, year, lineage, HOCI, HCW, protocol, mapped_reads, ect, rct, rlu) %>%
+  dplyr::summarise(total = sum(as.numeric(sgRPTg_HQ) + as.numeric(sgRPTg_LQ)), total_g = sum(gRNA_count), total_raw_sgRNA = sum(sgRNA_HQ_count + sgRNA_LQ_count))
+
+
+
+```
+
+
+
+
+
+```{r}
+
+all$total = all$sgRPTg_HQ + all$sgRPTg_LQ
+all$lineage <- factor(all$lineage , levels = c("B.1.177","B.1.1.7"))
+stat.test <- all %>%
+  filter(pillar == "Pillar 2") %>%
+  filter(orf %in% c("ORF3a","ORF7a","ORF8","N*","ORF10")) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
+stat.test
+
+
+a = ggplot(
+  all %>%
+    filter(pillar == "Pillar 2") %>%
+    filter(orf %in% c("ORF3a","ORF7a","ORF8","N*","ORF10")) %>%
+    filter(lineage %in% c("B.1.177", "B.1.1.7")),
+  aes(lineage, total, color = lineage)
+) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  geom_jitter(height=0,size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 2") +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(400),
+    color = "#4D4845"
+  ) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(
+    expression(bold(
+      paste("sgRNA Reads/1000 Genomic (log"["10"], ")")
+    )),
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100),
+    expand = c(0, 0),
+    limits = c(0, 700)
+  ) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "None",
+    panel.grid.major.y = element_blank(),
+    plot.margin = margin(1, 1, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
+
+stat.test <- all %>%
+  filter(pillar == "Pillar 1") %>%
+   filter(orf %in% c("ORF3a","ORF7a","ORF8","N*","ORF10")) %>%
+  group_by(orf) %>%
+  wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm") %>%
+
+  mutate(y.position = 100)
+stat.test
+
+
+b = ggplot(
+  all %>%
+    filter(pillar == "Pillar 1") %>%
+    filter(orf %in% c("ORF3a","ORF7a","ORF8","N*","ORF10")) %>%
+    filter(lineage %in% c("B.1.177", "B.1.1.7")),
+  aes(lineage, total, color = lineage)
+) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  geom_jitter(height=0,size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 1") +
+  geom_boxplot(
+    outlier.shape = NA,
+    width = 0.2,
+    color = "grey18",
+    alpha = 0.5
+  ) +
+  geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2),
+    y.position = log10(400),
+    color = "#4D4845"
+  ) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(
+    expression(bold(
+      paste("sgRNA Reads/1000 Genomic (log"["10"], ")")
+    )),
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10, 100),
+    expand = c(0, 0),
+    limits = c(0, 700)
+  ) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1
+    ),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "None",
+    panel.grid.major.y = element_blank(),
+    plot.margin = margin(1, 1, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
+
+ggarrange(b,a,labels=c("A","B"),ncol=2)
+
+```
+
+
+
+
+
+
+Mapped, Genomic and total sub-genomic
+```{r}
+
+
+popular = c("B.1.177", "B.1.1.7")
+total$lineage <- factor(total$lineage, levels = popular)
+
+
+stat.test <- total %>% 
+  ungroup() %>%
+  filter(lineage %in% popular) %>% 
+  wilcox_test(mapped_reads ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm")
+
+ total %>% 
+  ungroup() %>%
+   filter(lineage %in% popular) %>% 
+  wilcox_effsize(mapped_reads ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE)
+
+g = ggplot(total %>% filter(lineage %in% popular), aes(lineage, mapped_reads, color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  # scale_y_continuous(expression(bold(paste("Mapped Reads (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(30000, 50000, 1000000,1500000), expand = c(0, 0), limits = c(30000, 2000000)) +
+  scale_y_continuous("Mapped Reads",limits=c(30000,1000000))+
+  ft_theme() +
+  theme(
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    legend.position = "None",
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_color_manual(values = c(aqua,coral)) +
+  scale_x_discrete("PANGO Lineage")+
+   geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2, label = p.adj),
+    inherit.aes = F,
+    y.position = 950000,
+    color = "#4D4845",
+    sort.val = "none"
+  )
+
+
+stat.test <- total %>% 
+  ungroup() %>%
+  filter(lineage %in% popular) %>% 
+  wilcox_test(total_g ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm")
+
+
+ total %>% 
+  ungroup() %>%
+   filter(lineage %in% popular) %>% 
+  wilcox_effsize(total_g ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE)
+
+h = ggplot(total %>% filter(lineage %in% popular), aes(lineage, total_g, color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous("Total Genomic Reads", limits = c(0, 100000)) +
+  ft_theme() +
+  theme(
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    legend.position = "None",
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_color_manual(values = c(aqua,coral)) +
+  scale_x_discrete("PANGO Lineage")+
+   geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2, label = p.adj),
+    inherit.aes = F,
+    y.position = 98000,
+    color = "#4D4845",
+    sort.val = "none"
+  )
+
+
+stat.test <- total %>% 
+  ungroup() %>%
+  filter(lineage %in% popular) %>% 
+  mutate(total_sgRNA_norm_mapped=total_raw_sgRNA/(mapped_reads/100000)) %>%
+  wilcox_test(total_sgRNA_norm_mapped ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm")
+
+ total %>% 
+  ungroup() %>%
+  filter(lineage %in% popular) %>% 
+  mutate(total_sgRNA_norm_mapped=total_raw_sgRNA/(mapped_reads/100000)) %>%
+  wilcox_effsize(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE)
+
+i = ggplot(total %>% filter(lineage %in% popular), aes(lineage, total_raw_sgRNA/(mapped_reads/100000), color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+  
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous(expression(bold(
+      paste("Sub-Genomic Reads/100k Mapped (log"["10"],")"))
+    ), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000, 100000), expand = c(0, 0), limits = c(0, 200000)) +
+  ft_theme() +
+
+  theme(
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    legend.position = "None",
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.grid.major.y = element_blank()
+  ) +
+  scale_color_manual(values = c(aqua, coral)) +
+  scale_x_discrete("PANGO Lineage")+
+   geom_bracket(
+    data = stat.test,
+    aes(xmin = group1, xmax = group2, label = p.adj),
+    inherit.aes = F,
+    y.position = log10(100000),
+    color = "#4D4845",
+    sort.val = "none"
+  )
+
+ggarrange(g,h,i,labels=c("A","B","C"),ncol=3)
+
+
+```
+
+
+
+
+
+
+
+HCW/HOCI etc
+```{r}
+
+a= ggplot(days %>% filter(Day_of_symptoms >= -5) %>% filter(lineage %in% c("B.1","B.1.1","B.1.177","B.1.1.7") ),aes(lineage,Day_of_symptoms))+geom_boxplot()+geom_jitter()+geom_signif(comparisons = list(c("B.1.1.7","B.1.177")))+facet_wrap(~HCW)
+
+pillar1_merged=merge(pillar1,metadata_pillar1)
+
+ggplot(pillar1_merged %>% filter(lineage %in% c("B.1.177","B.1.1.7")),aes(lineage,sgRPTg_HQ+sgRPHT_LQ))+
+  gem_boxplot()+
+  facet_grid(~HCW)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r}
 
 all %>%
-    filter(pillar=="Pillar 2") %>%
-    filter(is.na(orf) == F) %>%
-    group_by(orf) %>%
-    wilcox_effsize(total~lineage,comparisons=list(c("B.1.1.7","B.1.177")),paired = FALSE)
+  filter(pillar == "Pillar 2") %>%
+  filter(is.na(orf) == F) %>%
+  group_by(orf) %>%
+  wilcox_effsize(total ~ lineage, comparisons = list(c("B.1.1.7", "B.1.177")), paired = FALSE)
 ```
+_Supplementary Table 1_ | Pillar 2 Effect Size
+
 
 ```{r}
 require(ggridges)
-ggplot(merge(pillar1,clinical,by.x="sample",by.y="external_id")%>%filter(lineage %in% c("B","B.1","B.1.1","B.1.1.7","B.1.177"))%>%group_by(sample,lineage,days_since_symptom_onset)%>%summarise(),aes(y=lineage,x=days_since_symptom_onset,color=lineage,fill=lineage))+
-    geom_density_ridges(alpha=0.7,jittered_points = TRUE, position = "raincloud",
-    scale = 0.9,point_alpha=0.5)+
-    coord_cartesian(xlim = c(0,30))+
-    scale_color_manual(values=c(yellow,green,navy,coral,aqua))+
-    scale_fill_manual(values=c(yellow,green,navy,coral,aqua))+
-    ft_theme()+
+ggplot(days %>%
+         filter(lineage %in% c("B", "B.1", "B.1.1", "B.1.1.7", "B.1.177")) %>%
+         group_by(sample, lineage, Day_of_symptoms) %>%
+         filter(Day_of_symptoms >= 0) %>% 
+         summarise(), aes(y = lineage, x = Day_of_symptoms, color = lineage, fill = lineage)) +
+  geom_density_ridges(alpha = 0.7, jittered_points = TRUE, position = "raincloud",
+                      scale = 0.9, point_alpha = 0.1) +
+  coord_cartesian(xlim = c(-1, 20)) +
+  scale_color_manual(values = c(yellow, green, navy, coral, aqua)) +
+  scale_fill_manual(values = c(yellow, green, navy, coral, aqua)) +
+  ft_theme() +
+  geom_label(data=days %>% filter(is.na(Day_of_symptoms)==F) %>% group_by(lineage) %>% summarise(n=n()) %>% filter(lineage %in% c("B.1.1","B.1","B","B.1.1.7","B.1.177")),aes(y=lineage,x=17,label=paste("n = ",n)),fill="white")+
   theme(
     legend.position = "None"
-  )+
-    scale_x_continuous("Days Since Symptom Onset")+
-    scale_y_discrete("PANGO Lineage")
+  ) +
+  scale_x_continuous("Days Since Symptom Onset") +
+  scale_y_discrete("PANGO Lineage")
 
 ```
 
 
-# Figure 1
+# Figure 2
 
 ```{r fig.width=10,fig.height=4}
 
 require(ggbeeswarm)
 
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7","P.2")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7", "P.2")
 all$orf <- factor(all$orf, levels = c("S", "E", "M", "N", "ORF6"))
 all$lineage <- factor(all$lineage, levels = popular)
 
 setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
 img1 <- readPNG("images/pillar testing.png")
 
-flow = ggplot() + 
-    background_image(img1) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0.5, l=2, r=2, b=0.5, unit = "cm"))
+flow = ggplot() +
+  background_image(img1) +
+  # This ensures that the image leaves some space at the edges
+  theme(plot.margin = margin(t = 0.5, l = 2, r = 2, b = 0.5, unit = "cm"))
 
-popular = c("B","B.1","B.1.177")
+popular = c("B", "B.1", "B.1.177")
 
 
-all$total = all$sgRPTg_HQ+all$sgRPTg_LQ
-flow = ggplot() + 
-    background_image(img1) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0.5, l=0, r=0, b=0.5, unit = "cm"))
+all$total = all$sgRPTg_HQ + all$sgRPTg_LQ
+flow = ggplot() +
+  background_image(img1) +
+  # This ensures that the image leaves some space at the edges
+  theme(plot.margin = margin(t = 0.5, l = 0, r = 0, b = 0.5, unit = "cm"))
 
 img2 <- readPNG("images/trs.png")
 
-reads = ggplot() + 
-    background_image(img2) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0, l=0, r=0, b=0, unit = "cm"))
+reads = ggplot() +
+  background_image(img2) +
+  # This ensures that the image leaves some space at the edges
+  theme(plot.margin = margin(t = 0, l = 0, r = 0, b = 0, unit = "cm"))
 
-popular = c("B","B.1","B.1.177")
-
-
+popular = c("B", "B.1", "B.1.177")
 
 
-a=ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
+
+
+a = ggplot(all %>%
+             filter(pillar == "Pillar 1") %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.177")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
- 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,100000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.177")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 100000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank()
-  )+
-  scale_color_manual(values=c(grey,green,aqua))
+  ) +
+  scale_color_manual(values = c(grey, green, aqua))
 
-popular = c("B","B.1","B.1.1","B.1.1.7")
+popular = c("B", "B.1", "B.1.1", "B.1.1.7")
 
-b=ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
+b = ggplot(all %>%
+             filter(pillar == "Pillar 1") %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,700000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 700000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank()
-  )+
-  scale_color_manual(values=c(grey,green,navy,coral))
+  ) +
+  scale_color_manual(values = c(grey, green, navy, coral))
 
-popular = c("B.1.177","B.1.1.7")
+popular = c("B.1.177", "B.1.1.7")
 
-c=ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
-# geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  labs(subtitle = "Pillar 1")+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+c = ggplot(all %>%
+             filter(pillar == "Pillar 1") %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 1") +
 
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
 
 
@@ -633,62 +1799,62 @@ c=ggplot(all %>% filter(pillar=="Pillar 1") %>% filter(orf!="NA") %>% filter(lin
 
 
 
-popular = c("B.1","B.1.1","B.1.177","B.1.1.7")
+popular = c("B.1.177", "B.1.1.7")
 
 
 total$lineage <- factor(total$lineage, levels = popular)
-g=ggplot(total%>%filter(lineage %in% popular),aes(lineage,mapped_reads,color=lineage))+
-    geom_violin()+
-  geom_jitter(height=0,size=2,alpha=0.1)+
-  geom_signif(comparisons = list(c("B.1","B.1.1"),c("B.1","B.1.177"),c("B.1.1","B.1.1.7"),c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.12,map_signif_level=T,textsize = 3,pairwise.display="significant")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_continuous(expression(bold(paste("Mapped Reads (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(30000,100000,1000000),expand=c(0,0),limits=c(30000,5000000))+
+g = ggplot(total %>% filter(lineage %in% popular), aes(lineage, mapped_reads, color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1", "B.1.1"), c("B.1", "B.1.177"), c("B.1.1", "B.1.1.7"), c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.12, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous(expression(bold(paste("Mapped Reads (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(30000, 100000, 1000000), expand = c(0, 0), limits = c(30000, 5000000)) +
   # scale_y_continuous("Mapped Reads",limits = c(0,1000000))+
-  ft_theme()+
+  ft_theme() +
   theme(
-    panel.background=element_rect(fill="grey97",color="white"),
+    panel.background = element_rect(fill = "grey97", color = "white"),
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm"),
-     axis.text.x = element_text(angle=45,hjust=1,vjust=1),
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
     panel.grid.major.y = element_blank()
-  )+
-  scale_color_manual(values=c(green,navy,coral,aqua))+
+  ) +
+  scale_color_manual(values = c(aqua,coral)) +
   scale_x_discrete("PANGO Lineage")
 
-h=ggplot(total %>% filter(lineage %in% popular),aes(lineage,total_g,color=lineage))+
-    geom_violin()+
-  geom_jitter(height=0,size=2,alpha=0.1)+
-  geom_signif(comparisons = list(c("B.1","B.1.1"),c("B.1","B.1.177"),c("B.1.1","B.1.1.7"),c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.1,map_signif_level=T,textsize = 3,pairwise.display="significant")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_continuous("Genomic Reads/100k Mapped",limits=c(0,32000))+
-  ft_theme()+
+h = ggplot(total %>% filter(lineage %in% popular), aes(lineage, total_g, color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1", "B.1.1"), c("B.1", "B.1.177"), c("B.1.1", "B.1.1.7"), c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.1, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous("Genomic Reads/100k Mapped", limits = c(0, 32000)) +
+  ft_theme() +
   theme(
-    panel.background=element_rect(fill="grey97",color="white"),
+    panel.background = element_rect(fill = "grey97", color = "white"),
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm"),
-     axis.text.x = element_text(angle=45,hjust=1,vjust=1),
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
     panel.grid.major.y = element_blank()
-  )+
-  scale_color_manual(values=c(green,navy,coral,aqua))+
+  ) +
+  scale_color_manual(values = c(aqua,coral)) +
   scale_x_discrete("PANGO Lineage")
 
 
-i=ggplot(total %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
-    geom_violin()+
- geom_jitter(height=0,size=2,alpha=0.1)+
- geom_signif(comparisons = list(c("B.1","B.1.1"),c("B.1","B.1.177"),c("B.1.1","B.1.1.7"),c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.11,map_signif_level=T,textsize = 3,pairwise.display="significant")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_continuous("Sub-Genomic Reads/100k Mapped",trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000,100000),expand=c(0,0),limits=c(0,10000000))+
-  ft_theme()+
-  
+i = ggplot(total %>% filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
+  geom_violin() +
+  geom_jitter(height = 0, size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1", "B.1.1"), c("B.1", "B.1.177"), c("B.1.1", "B.1.1.7"), c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.11, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous("Sub-Genomic Reads/100k Mapped", trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000, 100000), expand = c(0, 0), limits = c(0, 10000000)) +
+  ft_theme() +
+
   theme(
-    panel.background=element_rect(fill="grey97",color="white"),
+    panel.background = element_rect(fill = "grey97", color = "white"),
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm"),
-     axis.text.x = element_text(angle=45,hjust=1,vjust=1),
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
     panel.grid.major.y = element_blank()
-  )+
-  scale_color_manual(values=c(green,navy,aqua,coral))+
+  ) +
+  scale_color_manual(values = c(aqua, coral)) +
   scale_x_discrete("PANGO Lineage")
 
 
@@ -709,72 +1875,77 @@ i=ggplot(total %>% filter(lineage %in% popular),aes(lineage,total,color=lineage)
 
 
 
-a2=ggplot(all %>% filter(pillar=="Pillar 2") %>% filter(orf!="NA") %>% filter(lineage %in% c("B.1.177","B.1.1.7")),aes(lineage,total,color=lineage))+
+a2 = ggplot(all %>%
+              filter(pillar == "Pillar 2") %>%
+              filter(orf != "NA") %>%
+              filter(lineage %in% c("B.1.177", "B.1.1.7")), aes(lineage, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  labs(subtitle = "Pillar 2")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  labs(subtitle = "Pillar 2") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
 
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
- 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,100000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 100000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-     plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
-ect = ggplot(metadata_pillar1 %>% filter(lineage %in% c("B.1","B.1.1","B.1.177","B.1.1.7")),aes(lineage,as.numeric(as.character(ect)),color=lineage))+
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
-   geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+ect = ggplot(metadata_pillar1 %>% filter(lineage %in% c("B.1", "B.1.1", "B.1.177", "B.1.1.7")), aes(lineage, as.numeric(as.character(ect)), color = lineage)) +
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
-     plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(green,navy,aqua,coral))+
-  scale_y_continuous("E Cycle Threshold",limits=c(10,45))
-  
-rlu =ggplot(metadata_pillar1 %>% filter(as.numeric(as.character(rlu))>800) %>% filter(lineage %in% c("B.1.177","B.1.1.7")),aes(lineage,as.numeric(as.character(rlu)),color=lineage))+
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="#4D4845",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3,pairwise.display="significant")+
-   geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(green, navy, aqua, coral)) +
+  scale_y_continuous("E Cycle Threshold", limits = c(10, 45))
+
+rlu = ggplot(metadata_pillar1 %>%
+               filter(as.numeric(as.character(rlu)) > 800) %>%
+               filter(lineage %in% c("B.1.177", "B.1.1.7")), aes(lineage, as.numeric(as.character(rlu)), color = lineage)) +
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "#4D4845", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3, pairwise.display = "significant") +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None",
     panel.grid.major.y = element_blank(),
     panel.grid.major.x = element_blank(),
-     plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(aqua,coral))+
-  scale_y_continuous("Relative Light Units",limits=c(800,1350))
-  
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(aqua, coral)) +
+  scale_y_continuous("Relative Light Units", limits = c(800, 1350))
 
-topright= ggarrange(ect,rlu,heights=c(1,1),labels=c("A","B"),ncol=1)
 
-toptop = ggarrange(topright,c,a2,widths=c(0.6,1,1),labels=c("","C","D"),ncol=3)
+topright = ggarrange(ect, rlu, heights = c(1, 1), labels = c("A", "B"), ncol = 1)
 
-top=ggarrange(a,b,labels=c("E","F"),nrow=1,ncol=2)
+toptop = ggarrange(topright, c, a2, widths = c(0.6, 1, 1), labels = c("", "C", "D"), ncol = 3)
 
-bottom=ggarrange(g,h,i,nrow=1,ncol=3,labels=c("G","H","I"))
+top = ggarrange(a, b, labels = c("E", "F"), nrow = 1, ncol = 2)
 
-ggarrange(toptop,top,bottom,heights=c(1,0.7,0.7),nrow=3)
+bottom = ggarrange(g, h, i, nrow = 1, ncol = 3, labels = c("G", "H", "I"))
+
+ggarrange(toptop, top, bottom, heights = c(1, 0.7, 0.7), nrow = 3)
 
 ```
 
@@ -788,24 +1959,35 @@ comparing like for like data
 
 
 # get days that are represneted in B.1.1.7 data
-B117_days = as.data.frame(all %>% ungroup() %>% group_by(sample,lineage,days_since_symptom_onset) %>% dplyr::summarise(total=sum(total))%>% filter(lineage %in% c('B.1.1.7'))%>%ungroup() %>%select(days_since_symptom_onset) %>% filter(is.na(days_since_symptom_onset)==F))$days_since_symptom_onset
+B117_days = as.data.frame(all %>%
+                            ungroup() %>%
+                            group_by(sample, lineage, days_since_symptom_onset) %>%
+                            dplyr::summarise(total = sum(total)) %>%
+                            filter(lineage %in% c('B.1.1.7')) %>%
+                            ungroup() %>%
+                            select(days_since_symptom_onset) %>%
+                            filter(is.na(days_since_symptom_onset) == F))$days_since_symptom_onset
 
-ggplot(all %>% group_by(sample,lineage,days_since_symptom_onset) %>% dplyr::summarise(total=sum(total))%>% filter(days_since_symptom_onset %in% B117_days) %>% filter(lineage %in% popular),aes(lineage,total))+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.5,aes(color=as.factor(days_since_symptom_onset)))+
-  
-   geom_boxplot(outlier.shape = NA,width=0.1,color="grey18",alpha=0.5)+
- 
-  geom_signif(comparisons = list(c("F","M")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  ft_theme()+
+ggplot(all %>%
+         group_by(sample, lineage, days_since_symptom_onset) %>%
+         dplyr::summarise(total = sum(total)) %>%
+         filter(days_since_symptom_onset %in% B117_days) %>%
+         filter(lineage %in% popular), aes(lineage, total)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.5, aes(color = as.factor(days_since_symptom_onset))) +
+
+  geom_boxplot(outlier.shape = NA, width = 0.1, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("F", "M")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
-    strip.text.y = element_text(face = "bold",colour = '#4D4845')
-    
-  )+
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    strip.text.y = element_text(face = "bold", colour = '#4D4845')
+
+  ) +
   # scale_color_manual(values=c(grey,green,navy,aqua,coral))+
   scale_x_discrete("Lineage")
 
@@ -815,79 +1997,89 @@ ggplot(all %>% group_by(sample,lineage,days_since_symptom_onset) %>% dplyr::summ
 ```{r fig.width=8,fig.height=7}
 
 setwd('/home/md1mpar/Documents/projects/periscope/elephants')
-counts=read.table("shef_counts_pillar2.csv",header=T,sep=",",stringsAsFactors = F)
-lineages=read.table("shef_pillar2_lineages.lst",header=T,sep="\t")
-all = merge(counts,lineages)
+counts = read.table("shef_counts_pillar2.csv", header = T, sep = ",", stringsAsFactors = F)
+lineages = read.table("shef_pillar2_lineages.lst", header = T, sep = "\t")
+all = merge(counts, lineages)
 
-all = all %>% filter(orf!="ORF1a") %>% filter(mapped_reads>=50000)%>% group_by(sample,lineage,orf) %>% summarise(total=sum(as.numeric(sgRPTg_HQ)+as.numeric(sgRPTg_LQ)))
+all = all %>%
+  filter(orf != "ORF1a") %>%
+  filter(mapped_reads >= 50000) %>%
+  group_by(sample, lineage, orf) %>%
+  summarise(total = sum(as.numeric(sgRPTg_HQ) + as.numeric(sgRPTg_LQ)))
 # popular = lineages %>% group_by(lineage) %>% summarise(n=n()) %>% filter(n>20)
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7","B.1.351")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7", "B.1.351")
 all$orf <- factor(all$orf, levels = c("S", "E", "M", "N", "ORF6"))
 all$lineage <- factor(all$lineage, levels = popular)
-  require(ggsignif)
+require(ggsignif)
 
-popular = c("B","B.1","B.1.177")
-a=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
+popular = c("B", "B.1", "B.1.177")
+a = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
 
- geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.177")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,100000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.177")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 100000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(green,aqua))
+  ) +
+  scale_color_manual(values = c(green, aqua))
 
-popular = c("B.1","B.1.1","B.1.1.7")
+popular = c("B.1", "B.1.1", "B.1.1.7")
 
-b=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
-   geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
+b = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,700000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 700000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,navy,coral))
+  ) +
+  scale_color_manual(values = c(grey, green, navy, coral))
 
-popular = c("B.1.177","B.1.1.7")
+popular = c("B.1.177", "B.1.1.7")
 
-c=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
-   geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
+c = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
- 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(aqua,coral))
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
 
-ggarrange(a,b,c,labels=c("A","B","C"),nrow=2,ncol=2)
+ggarrange(a, b, c, labels = c("A", "B", "C"), nrow = 2, ncol = 2)
 
 ```
 
@@ -895,10 +2087,10 @@ ggarrange(a,b,c,labels=c("A","B","C"),nrow=2,ncol=2)
 
 
 
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7","B.1.351","P.2")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7", "B.1.351", "P.2")
 all$orf <- factor(all$orf, levels = c("S", "E", "M", "N", "ORF6"))
 all$lineage <- factor(all$lineage, levels = popular)
-  require(ggsignif)
+require(ggsignif)
 
 # 
 # x=ggplot(lineages%>%group_by(lineage)%>%summarise(n=n()),aes(area=n,fill=lineage,color="white",label=lineage))+
@@ -914,86 +2106,92 @@ all$lineage <- factor(all$lineage, levels = popular)
 setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
 img1 <- readPNG("images/pillar testing.png")
 
-flow = ggplot() + 
-    background_image(img1) +
-    # This ensures that the image leaves some space at the edges
-    theme(plot.margin = margin(t=0.5, l=2, r=2, b=0.5, unit = "cm"))
+flow = ggplot() +
+  background_image(img1) +
+  # This ensures that the image leaves some space at the edges
+  theme(plot.margin = margin(t = 0.5, l = 2, r = 2, b = 0.5, unit = "cm"))
 
-popular = c("B","B.1","B.1.177")
-
-
-all$total = all$sgRPTg_HQ+all$sgRPTg_LQ
+popular = c("B", "B.1", "B.1.177")
 
 
-a=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
+all$total = all$sgRPTg_HQ + all$sgRPTg_LQ
+
+
+a = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.177")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
- 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,100000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.177")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 100000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,aqua))
+  ) +
+  scale_color_manual(values = c(grey, green, aqua))
 
-popular = c("B","B.1","B.1.1","B.1.1.7")
+popular = c("B", "B.1", "B.1.1", "B.1.1.7")
 
-b=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
+b = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B","B.1"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,700000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_signif(comparisons = list(c("B", "B.1"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 700000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,navy,coral))
+  ) +
+  scale_color_manual(values = c(grey, green, navy, coral))
 
-popular = c("B.1.177","B.1.1.7")
+popular = c("B.1.177", "B.1.1.7")
 
-c=ggplot(all %>% filter(orf!="NA") %>% filter(lineage %in% popular),aes(lineage,total,color=lineage))+
-# geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
+c = ggplot(all %>%
+             filter(orf != "NA") %>%
+             filter(lineage %in% popular), aes(lineage, total, color = lineage)) +
+  # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
 
-  facet_wrap(~orf,scales="fixed",ncol=5)+
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  scale_x_discrete("PANGO Lineage")+
-  ft_theme()+
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+
+  facet_wrap(~orf, scales = "fixed", ncol = 5) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  scale_x_discrete("PANGO Lineage") +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(aqua,coral))
+  ) +
+  scale_color_manual(values = c(aqua, coral))
 
 
-ggarrange(flow,a,b,c,labels=c("A","B","C","D"),nrow=2,ncol=2)
+ggarrange(flow, a, b, c, labels = c("A", "B", "C", "D"), nrow = 2, ncol = 2)
 ```
 
 
@@ -1001,25 +2199,30 @@ ggarrange(flow,a,b,c,labels=c("A","B","C","D"),nrow=2,ncol=2)
 ```{r fig.height=8,fig.width=6}
 
 require(ggbeeswarm)
-ggplot(all %>% filter(hcw=="False") %>% filter(lineage != 'B.1.351') %>% filter(is.na(orf)==F) %>% filter(orf!="ORF8") %>% filter(is.na(lineage)==F),aes(hoci,total,color=lineage))+
+ggplot(all %>%
+         filter(hcw == "False") %>%
+         filter(lineage != 'B.1.351') %>%
+         filter(is.na(orf) == F) %>%
+         filter(orf != "ORF8") %>%
+         filter(is.na(lineage) == F), aes(hoci, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.1,color="grey18",alpha=0.5)+
- 
-  geom_signif(comparisons = list(c("True","False")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  facet_grid(lineage~orf)+ 
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  ft_theme()+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+
+  geom_boxplot(outlier.shape = NA, width = 0.1, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("True", "False")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  facet_grid(lineage ~ orf) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
-    strip.text.y = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    strip.text.y = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,navy,aqua,coral))+
+  ) +
+  scale_color_manual(values = c(grey, green, navy, aqua, coral)) +
   scale_x_discrete("HOCI Status")
 
 
@@ -1028,27 +2231,30 @@ ggplot(all %>% filter(hcw=="False") %>% filter(lineage != 'B.1.351') %>% filter(
 ```{r fig.height=8,fig.width=6}
 
 require(ggbeeswarm)
-ggplot(all %>% filter(lineage != 'B.1.351') %>% filter(is.na(orf)==F) %>% filter(orf!="ORF8") %>% filter(is.na(lineage)==F),aes(protocol,total,color=lineage))+
+ggplot(all %>%
+         filter(lineage != 'B.1.351') %>%
+         filter(is.na(orf) == F) %>%
+         filter(orf != "ORF8") %>%
+         filter(is.na(lineage) == F), aes(protocol, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.1,color="grey18",alpha=0.5)+
- 
-  geom_signif(comparisons = list(c("V2-GUNLT","V3-LOCOST")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  facet_grid(lineage~orf)+ 
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  ft_theme()+
-  theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
-    strip.text.y = element_text(face = "bold",colour = '#4D4845'),
-    legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,navy,aqua,coral))+
-  scale_x_discrete("ARTIC Protocol Version")
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
 
+  geom_boxplot(outlier.shape = NA, width = 0.1, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("V2-GUNLT", "V3-LOCOST")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  facet_grid(lineage ~ orf) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  ft_theme() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    strip.text.y = element_text(face = "bold", colour = '#4D4845'),
+    legend.position = "None"
+  ) +
+  scale_color_manual(values = c(grey, green, navy, aqua, coral, yellow)) +
+  scale_x_discrete("ARTIC Protocol Version")
 
 ```
 
@@ -1056,25 +2262,28 @@ ggplot(all %>% filter(lineage != 'B.1.351') %>% filter(is.na(orf)==F) %>% filter
 ```{r fig.height=8,fig.width=6}
 
 require(ggbeeswarm)
-ggplot(all %>% filter(lineage != 'B.1.351') %>% filter(is.na(orf)==F) %>% filter(is.na(lineage)==F),aes(hcw,total,color=lineage))+
+ggplot(all %>%
+         filter(lineage != 'B.1.351') %>%
+         filter(is.na(orf) == F) %>%
+         filter(is.na(lineage) == F), aes(hcw, total, color = lineage)) +
   # geom_quasirandom(varwidth = TRUE,alpha=0.1)+
-  geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  
-   geom_boxplot(outlier.shape = NA,width=0.1,color="grey18",alpha=0.5)+
- 
-  geom_signif(comparisons = list(c("True","False")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  facet_grid(lineage~orf)+ 
-  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"],")"))),trans=scales::pseudo_log_trans(base =10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,150000))+
-  ft_theme()+
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+
+  geom_boxplot(outlier.shape = NA, width = 0.1, color = "grey18", alpha = 0.5) +
+
+  geom_signif(comparisons = list(c("True", "False")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  facet_grid(lineage ~ orf) +
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10), breaks = c(0, 10, 100, 1000, 10000), expand = c(0, 0), limits = c(0, 150000)) +
+  ft_theme() +
   theme(
-    axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-    panel.background=element_rect(fill="grey97",color="white"),
-    strip.text.x = element_text(face = "bold",colour = '#4D4845'),
-    strip.text.y = element_text(face = "bold",colour = '#4D4845'),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    strip.text.x = element_text(face = "bold", colour = '#4D4845'),
+    strip.text.y = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "None"
-  )+
-  scale_color_manual(values=c(grey,green,navy,aqua,coral))+
+  ) +
+  scale_color_manual(values = c(grey, green, navy, aqua, coral)) +
   scale_x_discrete("HCW Status")
 
 
@@ -1087,89 +2296,102 @@ ggplot(all %>% filter(lineage != 'B.1.351') %>% filter(is.na(orf)==F) %>% filter
 ```{r}
 
 setwd('/home/md1mpar/Documents/projects/periscope/elephants')
-counts=read.table("shef_novel_counts.csv",header=T,sep=",")
-lineages=read.table("shef_lineages.lst",header=T,sep="\t")
-all = merge(counts,lineages)
-novel_shef=all
-novel_shef = novel_shef %>% separate(orf,c("novel","pos"),sep="_")
-novel_shef$pos=as.numeric(as.character(novel_shef$pos))
-novel_shef$location="SHEF"
-novel_shef$y= ifelse(novel_shef$lineage == "B.1.1.7",-0.05,0.05)
+counts = read.table("shef_novel_counts.csv", header = T, sep = ",")
+lineages = read.table("shef_lineages.lst", header = T, sep = "\t")
+all = merge(counts, lineages)
+novel_shef = all
+novel_shef = novel_shef %>% separate(orf, c("novel", "pos"), sep = "_")
+novel_shef$pos = as.numeric(as.character(novel_shef$pos))
+novel_shef$location = "SHEF"
+novel_shef$y = ifelse(novel_shef$lineage == "B.1.1.7", -0.05, 0.05)
 
 
-novel=novel_shef %>% filter(pos > 50)
-novel$start=50
+novel = novel_shef %>% filter(pos > 50)
+novel$start = 50
 
-summary = novel%>%mutate(total=(as.numeric(as.character(nsgRNA_HQ_count))+ as.numeric(as.character(nsgRNA_LQ_count))))%>%group_by(start,y,lineage,pos)%>%summarise(n=n(),m=sum(total))
+summary = novel %>%
+  mutate(total = (as.numeric(as.character(nsgRNA_HQ_count)) + as.numeric(as.character(nsgRNA_LQ_count)))) %>%
+  group_by(start, y, lineage, pos) %>%
+  summarise(n = n(), m = sum(total))
 
-full=ggplot(mapping=aes(x=start,y=y,xend=pos,yend=y))+
-  geom_curve(data=summary%>%filter(lineage=="B.1.177")%>%filter(n>5),lineend = "round",curvature=-0.3,color=grey,size=0.1)+
-  geom_curve(data=summary%>%filter(lineage=="B.1.1.7")%>%filter(n>5),lineend = "round",curvature=0.3,color=grey,size=0.1)+
-  scale_alpha_continuous("Number of Samples")+
-  ft_theme()+
-  scale_x_continuous("Position")+
-  annotate(geom="rect",xmin=0,xmax=30000,ymin=-0.05,ymax=0.05,color="grey80",fill="grey80")+
-  annotate(geom="rect",xmin=0,xmax=200,ymin=-0.05,ymax=0.05,color="grey30",fill="grey30")+
-  annotate(geom="rect",xmin=200,xmax=13483,ymin=-0.05,ymax=0.05,color="grey50",fill="grey50")+
-  annotate(geom="text",x=7000,y=0,color="white",label="ORF1a",fontface='bold')+
-  annotate(geom="rect",xmin=13483,xmax=30000,ymin=-0.05,ymax=0.05,color="grey60",fill="grey60")+
-  annotate(geom="text",x=17000,y=0,color="white",label="ORF1b",fontface='bold')+
-  annotate(geom="rect",xmin=21532,xmax=30000,ymin=-0.05,ymax=0.05,color=navy,fill=navy)+
-  annotate(geom="text",x=23500,y=0,color="white",label="S",fontface='bold')+
-  annotate(geom="rect",xmin=25361,xmax=30000,ymin=-0.05,ymax=0.05,color=coral,fill=coral)+
-  annotate(geom="text",x=25750,y=0,color="white",label="3a",fontface='bold')+
-  annotate(geom="rect",xmin=26213,xmax=30000,ymin=-0.05,ymax=0.05,color=green,fill=green)+
-  annotate(geom="rect",xmin=26449,xmax=30000,ymin=-0.05,ymax=0.05,color=purple,fill=purple)+
-  annotate(geom="text",x=26700,y=0,color="white",label="M",fontface='bold')+
-  annotate(geom="rect",xmin=27017,xmax=30000,ymin=-0.05,ymax=0.05,color=yellow,fill=yellow)+
-  annotate(geom="rect",xmin=27364,xmax=30000,ymin=-0.05,ymax=0.05,color=orange,fill=orange)+
-  annotate(geom="rect",xmin=27864,xmax=30000,ymin=-0.05,ymax=0.05,color=grey,fill=grey)+
-  annotate(geom="rect",xmin=28235,xmax=30000,ymin=-0.05,ymax=0.05,color=aqua,fill=aqua)+
-  annotate(geom="text",x=28800,y=0,color="white",label="N",fontface='bold')+
-  annotate(geom="rect",xmin=29510,xmax=30000,ymin=-0.05,ymax=0.05,color="grey80",fill="grey80")+
-  annotate(geom="rect",xmin=0,xmax=30000,ymin=-0.05,ymax=0.05,fill="white",alpha=0.3)+
-  geom_point(alpha=0.8,data=summary%>%filter(lineage=="B.1.177")%>%filter(n>5)%>%arrange(n),aes(x=pos,y=0.05,size=m,color=n))+
-  geom_point(alpha=0.8,data=summary%>%filter(lineage=="B.1.1.7")%>%filter(n>5),aes(x=pos,y=-0.05,size=m,color=n))+
+full = ggplot(mapping = aes(x = start, y = y, xend = pos, yend = y)) +
+  geom_curve(data = summary %>%
+    filter(lineage == "B.1.177") %>%
+    filter(n > 5), lineend = "round", curvature = -0.3, color = grey, size = 0.1) +
+  geom_curve(data = summary %>%
+    filter(lineage == "B.1.1.7") %>%
+    filter(n > 5), lineend = "round", curvature = 0.3, color = grey, size = 0.1) +
+  scale_alpha_continuous("Number of Samples") +
+  ft_theme() +
+  scale_x_continuous("Position") +
+  annotate(geom = "rect", xmin = 0, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey80", fill = "grey80") +
+  annotate(geom = "rect", xmin = 0, xmax = 200, ymin = -0.05, ymax = 0.05, color = "grey30", fill = "grey30") +
+  annotate(geom = "rect", xmin = 200, xmax = 13483, ymin = -0.05, ymax = 0.05, color = "grey50", fill = "grey50") +
+  annotate(geom = "text", x = 7000, y = 0, color = "white", label = "ORF1a", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 13483, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey60", fill = "grey60") +
+  annotate(geom = "text", x = 17000, y = 0, color = "white", label = "ORF1b", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 21532, xmax = 30000, ymin = -0.05, ymax = 0.05, color = navy, fill = navy) +
+  annotate(geom = "text", x = 23500, y = 0, color = "white", label = "S", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 25361, xmax = 30000, ymin = -0.05, ymax = 0.05, color = coral, fill = coral) +
+  annotate(geom = "text", x = 25750, y = 0, color = "white", label = "3a", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 26213, xmax = 30000, ymin = -0.05, ymax = 0.05, color = green, fill = green) +
+  annotate(geom = "rect", xmin = 26449, xmax = 30000, ymin = -0.05, ymax = 0.05, color = purple, fill = purple) +
+  annotate(geom = "text", x = 26700, y = 0, color = "white", label = "M", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 27017, xmax = 30000, ymin = -0.05, ymax = 0.05, color = yellow, fill = yellow) +
+  annotate(geom = "rect", xmin = 27364, xmax = 30000, ymin = -0.05, ymax = 0.05, color = orange, fill = orange) +
+  annotate(geom = "rect", xmin = 27864, xmax = 30000, ymin = -0.05, ymax = 0.05, color = grey, fill = grey) +
+  annotate(geom = "rect", xmin = 28235, xmax = 30000, ymin = -0.05, ymax = 0.05, color = aqua, fill = aqua) +
+  annotate(geom = "text", x = 28800, y = 0, color = "white", label = "N", fontface = 'bold') +
+  annotate(geom = "rect", xmin = 29510, xmax = 30000, ymin = -0.05, ymax = 0.05, color = "grey80", fill = "grey80") +
+  annotate(geom = "rect", xmin = 0, xmax = 30000, ymin = -0.05, ymax = 0.05, fill = "white", alpha = 0.3) +
+  geom_point(alpha = 0.8, data = summary %>%
+    filter(lineage == "B.1.177") %>%
+    filter(n > 5) %>%
+    arrange(n), aes(x = pos, y = 0.05, size = m, color = n)) +
+  geom_point(alpha = 0.8, data = summary %>%
+    filter(lineage == "B.1.1.7") %>%
+    filter(n > 5), aes(x = pos, y = -0.05, size = m, color = n)) +
   theme(
-    axis.text.y=element_blank(),
-    axis.title.y=element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     axis.line.y = element_blank(),
-    panel.grid.major = element_blank(), 
+    panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     legend.position = "right",
     legend.justification = "center",
     legend.direction = "vertical",
     legend.key.size = unit(0.5, "cm"),
     legend.key.height = unit(0.3, "cm"),
-        )+
-  scale_color_gradient("Number of\nSamples",low=navy,high=coral)+
-  annotate(geom="text",label="B.1.177",fontface='bold',x=1000,y=0.5,color="#4D4845", hjust = 0)+
-  annotate(geom="text",label="B.1.1.7",fontface='bold',x=1000,y=-0.5,color="#4D4845", hjust = 0)+
+  ) +
+  scale_color_gradient("Number of\nSamples", low = navy, high = coral) +
+  annotate(geom = "text", label = "B.1.177", fontface = 'bold', x = 1000, y = 0.5, color = "#4D4845", hjust = 0) +
+  annotate(geom = "text", label = "B.1.1.7", fontface = 'bold', x = 1000, y = -0.5, color = "#4D4845", hjust = 0) +
   scale_size_continuous("Number of\nReads")
 full
 
-zoom = full+
-  coord_cartesian(xlim=c(22000,30000),ylim=c(-0.2,0.2))+
-  annotate(geom="text",x=26330,y=0,color="white",label="E",fontface='bold')+
-  annotate(geom="text",x=27170,y=0,color="white",label="6",fontface='bold')+
-  annotate(geom="text",x=27600,y=0,color="white",label="7a",fontface='bold')+
-  annotate(geom="text",x=28010,y=0,color="white",label="8",fontface='bold')+
-  annotate(geom="text",x=29750,y=0,color="white",label="10",fontface='bold')+
+zoom = full +
+  coord_cartesian(xlim = c(22000, 30000), ylim = c(-0.2, 0.2)) +
+  annotate(geom = "text", x = 26330, y = 0, color = "white", label = "E", fontface = 'bold') +
+  annotate(geom = "text", x = 27170, y = 0, color = "white", label = "6", fontface = 'bold') +
+  annotate(geom = "text", x = 27600, y = 0, color = "white", label = "7a", fontface = 'bold') +
+  annotate(geom = "text", x = 28010, y = 0, color = "white", label = "8", fontface = 'bold') +
+  annotate(geom = "text", x = 29750, y = 0, color = "white", label = "10", fontface = 'bold') +
   theme(
-    legend.position="none",
+    legend.position = "none",
     axis.title.x = element_blank(),
-    panel.background = element_rect(colour="#4D4845"),
-    plot.title = element_text(size=10,colour="#4D4845")
-  )+ggtitle("Zoom 22000-30000")
+    panel.background = element_rect(colour = "#4D4845"),
+    plot.title = element_text(size = 10, colour = "#4D4845")
+  ) +
+  ggtitle("Zoom 22000-30000")
 
 
-novel$color=ifelse(novel$lineage=="B.1.1.7","B.1.1.7","Other")
+novel$color = ifelse(novel$lineage == "B.1.1.7", "B.1.1.7", "Other")
 
-ggplot(novel %>% filter(pos>28250)%>%filter(pos<28310),aes(pos,nsgRPTg_HQ+nsgRPTg_LQ,fill=color))+
-  geom_bar(stat="identity")+
-  ft_theme()+
-  scale_fill_manual("Lineage",values=c(coral,grey))+
-  scale_y_continuous("Sum of ngRPTg (HQ+LQ)")+
+ggplot(novel %>% filter(pos > 28250) %>% filter(pos < 28310), aes(pos, nsgRPTg_HQ + nsgRPTg_LQ, fill = color)) +
+  geom_bar(stat = "identity") +
+  ft_theme() +
+  scale_fill_manual("Lineage", values = c(coral, grey)) +
+  scale_y_continuous("Sum of ngRPTg (HQ+LQ)") +
   scale_x_continuous("Position")
 
 ```
@@ -1179,59 +2401,70 @@ proportion of ORF9b
 ```{r}
 
 setwd('/home/md1mpar/Documents/projects/periscope/elephants')
-counts=read.table("shef_counts.csv",header=T,sep=",")
-lineages=read.table("shef_lineages.lst",header=T,sep="\t")
-all = merge(counts,lineages)
+counts = read.table("shef_counts.csv", header = T, sep = ",")
+lineages = read.table("shef_lineages.lst", header = T, sep = "\t")
+all = merge(counts, lineages)
 
-all = all %>% filter(orf!="ORF1a") %>% filter(mapped_reads > 50000) %>% group_by(sample,lineage,orf,gender,age,hcw,mapped_reads) %>% summarise(total=sum(sgRPTg_HQ+sgRPTg_LQ),total_g=sum(gRHPT))
-all$class=ifelse(all$lineage=="B.1.351","True","False")
+all = all %>%
+  filter(orf != "ORF1a") %>%
+  filter(mapped_reads > 50000) %>%
+  group_by(sample, lineage, orf, gender, age, hcw, mapped_reads) %>%
+  summarise(total = sum(sgRPTg_HQ + sgRPTg_LQ), total_g = sum(gRHPT))
+all$class = ifelse(all$lineage == "B.1.351", "True", "False")
 # popular = lineages %>% group_by(lineage) %>% summarise(n=n()) %>% filter(n>20)
-popular = c("B","B.1","B.1.1","B.1.177","B.1.1.7")
+popular = c("B", "B.1", "B.1.1", "B.1.177", "B.1.1.7")
 all$lineage <- factor(all$lineage, levels = popular)
 
-pillar1=all
-pillar1$pillar="Pillar1"
+pillar1 = all
+pillar1$pillar = "Pillar1"
 
-orf9b = novel %>% filter(pos==28282) %>% filter(lineage %in% c("B.1.1.7","B.1.177")) %>% group_by(sample,lineage,gender,age,hcw,protocol,hoci) %>% summarise(total=sum(nsgRPTg_HQ+nsgRPTg_LQ)) 
+orf9b = novel %>%
+  filter(pos == 28282) %>%
+  filter(lineage %in% c("B.1.1.7", "B.1.177")) %>%
+  group_by(sample, lineage, gender, age, hcw, protocol, hoci) %>%
+  summarise(total = sum(nsgRPTg_HQ + nsgRPTg_LQ))
 
-orf9b$orf= "ORF9b"
+orf9b$orf = "ORF9b"
 
 colors = c(grey,
-green,
-navy,
-yellow,
-"#c78eae",
-"#65ca9f",
-aqua,
-"#bfc2a6",
-purple,
-"#556037",
-coral)
+           green,
+           navy,
+           yellow,
+           "#c78eae",
+           "#65ca9f",
+           aqua,
+           "#bfc2a6",
+           purple,
+           "#556037",
+           coral)
 
 
-prop_n=rbind(pillar1 %>% filter(lineage %in% c("B.1.1.7","B.1.177")),orf9b)
+prop_n = rbind(pillar1 %>% filter(lineage %in% c("B.1.1.7", "B.1.177")), orf9b)
 
-reordered = prop_n %>% group_by(lineage) %>% filter(orf=="S") %>% arrange(desc(total),.by_group=T)
+reordered = prop_n %>%
+  group_by(lineage) %>%
+  filter(orf == "S") %>%
+  arrange(desc(total), .by_group = T)
 # reordered = prop_n %>% filter(orf=="S") %>% group_by(lineage)  %>% mutate(sample=reorder_within(sample,total,lineage))
-prop_n$sample = factor(prop_n$sample,levels=reordered$sample)
+prop_n$sample = factor(prop_n$sample, levels = reordered$sample)
 
-prop=ggplot(prop_n,aes(sample,total,fill=orf,color=orf))+
-  geom_bar(stat="identity",position="fill")+
-  ft_theme()+
+prop = ggplot(prop_n, aes(sample, total, fill = orf, color = orf)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ft_theme() +
   theme(
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title.x = element_blank(),
     legend.position = "bottom",
-    strip.text.x = element_text(face = "bold",colour = '#4D4845')
-  )+
-  scale_fill_manual("ORF",values=colors)+
-  scale_color_manual("ORF",values=colors)+
-  facet_wrap(~lineage,nrow=4,scales="free")+
+    strip.text.x = element_text(face = "bold", colour = '#4D4845')
+  ) +
+  scale_fill_manual("ORF", values = colors) +
+  scale_color_manual("ORF", values = colors) +
+  facet_wrap(~lineage, nrow = 4, scales = "free") +
   scale_y_continuous("Proportion (Normalised sgRNA HQ+LQ)")
 
 
-ggarrange(full,prop,ncol=1,nrow=2,labels=c("A","B"),heights=c(0.4,1))
+ggarrange(full, prop, ncol = 1, nrow = 2, labels = c("A", "B"), heights = c(0.4, 1))
 
 ```
 
@@ -1239,116 +2472,129 @@ Supp Figure - mapped reads and sgRNA reads
 
 ```{r}
 setwd('/home/md1mpar/Documents/projects/periscope/elephants')
-counts=read.table("shef_counts.csv",header=T,sep=",")
-lineages=read.table("shef_lineages.lst",header=T,sep="\t")
-all = merge(counts,lineages)
+counts = read.table("shef_counts.csv", header = T, sep = ",")
+lineages = read.table("shef_lineages.lst", header = T, sep = "\t")
+all = merge(counts, lineages)
 
-all = all %>% filter(orf!="ORF1a") %>% filter(lineage %in% c("B.1","B.1.1","B.1.177","B.1.1.7")) %>% filter(mapped_reads > 50000) %>% group_by(sample,lineage,gender,age,hcw,mapped_reads) %>% summarise(total=sum(sgRPHT_ALL),total_g=sum(gRHPT))
+all = all %>%
+  filter(orf != "ORF1a") %>%
+  filter(lineage %in% c("B.1", "B.1.1", "B.1.177", "B.1.1.7")) %>%
+  filter(mapped_reads > 50000) %>%
+  group_by(sample, lineage, gender, age, hcw, mapped_reads) %>%
+  summarise(total = sum(sgRPHT_ALL), total_g = sum(gRHPT))
 
 all$lineage <- factor(all$lineage, levels = c("B.1", "B.1.1", "B.1.177", "B.1.1.7"))
-a=ggplot(all,aes(lineage,mapped_reads,color=lineage))+
-    geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7"),c("B.1","B.1.177")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  labs(subtitle = "Mapped")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_continuous("Mapped Reads")+
-  ft_theme()+
+a = ggplot(all, aes(lineage, mapped_reads, color = lineage)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7"), c("B.1", "B.1.177")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  labs(subtitle = "Mapped") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_continuous("Mapped Reads") +
+  ft_theme() +
   theme(
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(green,navy,coral,aqua))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(green, navy, coral, aqua))
 
-b=ggplot(all,aes(lineage,total_g,color=lineage))+
-    geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
-  geom_signif(comparisons = list(c("B.1.177","B.1.1.7"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7"),c("B.1","B.1.177")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  labs(subtitle = "Genomic")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_log10("Total Genomic Reads per 100,000 Mapped")+
-  ft_theme()+
+b = ggplot(all, aes(lineage, total_g, color = lineage)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7"), c("B.1", "B.1.177")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  labs(subtitle = "Genomic") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_log10("Total Genomic Reads per 100,000 Mapped") +
+  ft_theme() +
   theme(
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(green,navy,coral,aqua))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(green, navy, coral, aqua))
 
 
-c=ggplot(all,aes(lineage,total,color=lineage))+
-    geom_violin()+
-  geom_beeswarm(size=2,alpha=0.1)+
- geom_signif(comparisons = list(c("B.1.177","B.1.1.7"),c("B.1","B.1.1"),c("B.1.1","B.1.1.7"),c("B.1","B.1.177")),color="grey",tip_length = 0,step_increase = 0.07,map_signif_level=T,textsize = 3)+
-  labs(subtitle = "Sub-Genomic")+
-   geom_boxplot(outlier.shape = NA,width=0.2,color="grey18",alpha=0.5)+
-  scale_y_log10("Total Sub-Genomic Reads per 100,000 Mapped")+
-  ft_theme()+
-  
+c = ggplot(all, aes(lineage, total, color = lineage)) +
+  geom_violin() +
+  geom_beeswarm(size = 2, alpha = 0.1) +
+  geom_signif(comparisons = list(c("B.1.177", "B.1.1.7"), c("B.1", "B.1.1"), c("B.1.1", "B.1.1.7"), c("B.1", "B.1.177")), color = "grey", tip_length = 0, step_increase = 0.07, map_signif_level = T, textsize = 3) +
+  labs(subtitle = "Sub-Genomic") +
+  geom_boxplot(outlier.shape = NA, width = 0.2, color = "grey18", alpha = 0.5) +
+  scale_y_log10("Total Sub-Genomic Reads per 100,000 Mapped") +
+  ft_theme() +
+
   theme(
     legend.position = "None",
-    plot.margin = margin(1,0.5,0.5,0.5, "cm")
-  )+
-  scale_color_manual(values=c(green,navy,aqua,coral))
+    plot.margin = margin(1, 0.5, 0.5, 0.5, "cm")
+  ) +
+  scale_color_manual(values = c(green, navy, aqua, coral))
 
 
-ggarrange(a,b,c,labels=c("A","B","C"),nrow=1)
+ggarrange(a, b, c, labels = c("A", "B", "C"), nrow = 1)
 
 ```
 
 ```{r}
 setwd('/home/md1mpar/Documents/projects/periscope/reinfection')
-trio1=read.csv("trio_1.csv")
-trio1 = trio1 %>% filter(orf!="ORF1a")
-trio1$order=ifelse(trio1$sample=='SHEF-C0FF0',1,2)
-trio1$order=ifelse(trio1$sample=='SHEF-C849F',3,trio1$order)
-  
+trio1 = read.csv("trio_1.csv")
+trio1 = trio1 %>% filter(orf != "ORF1a")
+trio1$order = ifelse(trio1$sample == 'SHEF-C0FF0', 1, 2)
+trio1$order = ifelse(trio1$sample == 'SHEF-C849F', 3, trio1$order)
 
 
-sums_trio1 = trio1 %>% group_by(sample,order) %>% summarise(sum=sgRPTg_HQ+sgRPTg_LQ) %>% group_by(sample,order) %>% summarise(sum=sum(sum))
+
+sums_trio1 = trio1 %>%
+  group_by(sample, order) %>%
+  summarise(sum = sgRPTg_HQ + sgRPTg_LQ) %>%
+  group_by(sample, order) %>%
+  summarise(sum = sum(sum))
 
 
-a = ggplot(sums_trio1,aes(order,sum))+
-  geom_point()+
-  labs(title="NV362657 Trio")+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
+a = ggplot(sums_trio1, aes(order, sum)) +
+  geom_point() +
+  labs(title = "NV362657 Trio") +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
   theme_ipsum_rc()
 
 
-b = ggplot(trio1,aes(order,sgRPTg_HQ+sgRPTg_LQ,color=orf))+
-  geom_point()+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
+b = ggplot(trio1, aes(order, sgRPTg_HQ + sgRPTg_LQ, color = orf)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
   theme_ipsum_rc()
 
-trio2=read.csv("trio_2.csv")
-trio2 = trio2 %>% filter(orf!="ORF1a")
-trio2$order=ifelse(trio2$sample=='SHEF-C394A',1,2)
-trio2$order=ifelse(trio2$sample=='SHEF-C8022',3,trio2$order)
+trio2 = read.csv("trio_2.csv")
+trio2 = trio2 %>% filter(orf != "ORF1a")
+trio2$order = ifelse(trio2$sample == 'SHEF-C394A', 1, 2)
+trio2$order = ifelse(trio2$sample == 'SHEF-C8022', 3, trio2$order)
 
 
-sums_trio2 = trio2 %>% group_by(sample,order) %>% summarise(sum=sgRPTg_HQ+sgRPTg_LQ) %>% group_by(sample,order) %>% summarise(sum=sum(sum))
-c = ggplot(sums_trio2,aes(order,sum))+
-  geom_point()+
-  labs(title="NV391812 Trio")+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
-  theme_ipsum_rc()
-
-
-
-d = ggplot(trio2,aes(order,sgRPTg_HQ+sgRPTg_LQ,color=orf))+
-  geom_point()+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
+sums_trio2 = trio2 %>%
+  group_by(sample, order) %>%
+  summarise(sum = sgRPTg_HQ + sgRPTg_LQ) %>%
+  group_by(sample, order) %>%
+  summarise(sum = sum(sum))
+c = ggplot(sums_trio2, aes(order, sum)) +
+  geom_point() +
+  labs(title = "NV391812 Trio") +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
   theme_ipsum_rc()
 
 
-ggarrange(a,b,c,d,nrow=2,ncol=2,widths=c(1,1.5))
+
+d = ggplot(trio2, aes(order, sgRPTg_HQ + sgRPTg_LQ, color = orf)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
+  theme_ipsum_rc()
+
+
+ggarrange(a, b, c, d, nrow = 2, ncol = 2, widths = c(1, 1.5))
 
 
 ```
@@ -1362,41 +2608,49 @@ NV515298,SHEF-C8022
 
 ```{r}
 setwd('/home/md1mpar/Documents/projects/periscope/reinfection')
-trio1=read.csv("trio_1_novel.csv")
-trio1 = trio1 %>% filter(orf!="ORF1a")
-trio1$order=ifelse(trio1$sample=='SHEF-C0FF0',1,2)
-trio1$order=ifelse(trio1$sample=='SHEF-C849F',3,trio1$order)
+trio1 = read.csv("trio_1_novel.csv")
+trio1 = trio1 %>% filter(orf != "ORF1a")
+trio1$order = ifelse(trio1$sample == 'SHEF-C0FF0', 1, 2)
+trio1$order = ifelse(trio1$sample == 'SHEF-C849F', 3, trio1$order)
 
-sums_trio1 = trio1 %>% group_by(sample,order) %>% summarise(sum=nsgRNA_HQ_count+nsgRNA_LQ_count) %>% group_by(sample,order) %>% summarise(sum=sum(sum))
+sums_trio1 = trio1 %>%
+  group_by(sample, order) %>%
+  summarise(sum = nsgRNA_HQ_count + nsgRNA_LQ_count) %>%
+  group_by(sample, order) %>%
+  summarise(sum = sum(sum))
 
 
-a = ggplot(sums_trio1,aes(order,sum))+
-  geom_point()+
-  labs(title="NV362657 Trio")+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
+a = ggplot(sums_trio1, aes(order, sum)) +
+  geom_point() +
+  labs(title = "NV362657 Trio") +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
   theme_ipsum_rc()
 
 
-trio2=read.csv("trio_2_novel.csv")
-trio2 = trio2 %>% filter(orf!="ORF1a")
-trio2$order=ifelse(trio2$sample=='SHEF-C394A',1,2)
-trio2$order=ifelse(trio2$sample=='SHEF-C8022',3,trio2$order)
+trio2 = read.csv("trio_2_novel.csv")
+trio2 = trio2 %>% filter(orf != "ORF1a")
+trio2$order = ifelse(trio2$sample == 'SHEF-C394A', 1, 2)
+trio2$order = ifelse(trio2$sample == 'SHEF-C8022', 3, trio2$order)
 
 
-sums_trio2 = trio2 %>% group_by(sample,order) %>% summarise(sum=nsgRNA_HQ_count+nsgRNA_LQ_count) %>% group_by(sample,order) %>% summarise(sum=sum(sum))
+sums_trio2 = trio2 %>%
+  group_by(sample, order) %>%
+  summarise(sum = nsgRNA_HQ_count + nsgRNA_LQ_count) %>%
+  group_by(sample, order) %>%
+  summarise(sum = sum(sum))
 
-b = ggplot(sums_trio2,aes(order,sum))+
-  geom_point()+
-  labs(title="NV391812 Trio")+
-  geom_line()+
-  scale_y_continuous("Sum of HQ & LQ sgRPTg")+
-  scale_x_continuous(breaks=c(1,2,3))+
+b = ggplot(sums_trio2, aes(order, sum)) +
+  geom_point() +
+  labs(title = "NV391812 Trio") +
+  geom_line() +
+  scale_y_continuous("Sum of HQ & LQ sgRPTg") +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
   theme_ipsum_rc()
 
 
-ggarrange(a,b)
+ggarrange(a, b)
 
 
 ```
@@ -1405,33 +2659,40 @@ ggarrange(a,b)
 
 ```{r}
 setwd("/home/md1mpar/Documents/projects/covid19/elephant")
-hcw=read.table("hcw_b117.tsv",header=T,stringsAsFactors = F)
-hcw$order=as.numeric(row.names(hcw))
-hcw$hcw = str_replace(hcw$hcw,"False","Non-HCW")
-hcw$hcw = str_replace(hcw$hcw,"True","HCW")
+hcw = read.table("hcw_b117.tsv", header = T, stringsAsFactors = F)
+hcw$order = as.numeric(row.names(hcw))
+hcw$hcw = str_replace(hcw$hcw, "False", "Non-HCW")
+hcw$hcw = str_replace(hcw$hcw, "True", "HCW")
 
-hcw$hoci = str_replace(hcw$hoci,"False","Non-HOCI")
-hcw$hoci = str_replace(hcw$hoci,"True","HOCI")
+hcw$hoci = str_replace(hcw$hoci, "False", "Non-HOCI")
+hcw$hoci = str_replace(hcw$hoci, "True", "HOCI")
 
-plot_data = hcw %>% 
-  count(lineage, hcw, week) %>% 
-  group_by(hcw, lineage) %>% 
-  mutate(percent = n/sum(n))
+plot_data = hcw %>%
+  count(lineage, hcw, week) %>%
+  group_by(hcw, lineage) %>%
+  mutate(percent = n / sum(n))
 
-percents=hcw %>% group_by(hcw,lineage,week)%>%summarise(count=n())%>%group_by(week,hcw,hoci)%>%mutate(total=sum(count))%>%mutate(percent=(count/total)*100)
+percents = hcw %>%
+  group_by(hcw, lineage, week) %>%
+  summarise(count = n()) %>%
+  group_by(week, hcw, hoci) %>%
+  mutate(total = sum(count)) %>%
+  mutate(percent = (count / total) * 100)
 
-ggplot(hcw,aes(reorder(week,order),color=lineage,fill=lineage))+
-  geom_bar(stat="count",position="fill")+
-  facet_grid(hoci~hcw)+
-  theme_ipsum_rc()+
-  theme(axis.text.x = element_text(angle=45,vjust=1,hjust=1))+
-  scale_fill_manual("Lineage",values=c(coral,navy))+
-  scale_color_manual("Lineage",values=c(coral,navy))+
-  scale_y_continuous("Percentage")+
+ggplot(hcw, aes(reorder(week, order), color = lineage, fill = lineage)) +
+  geom_bar(stat = "count", position = "fill") +
+  facet_grid(hoci ~ hcw) +
+  theme_ipsum_rc() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_manual("Lineage", values = c(coral, navy)) +
+  scale_color_manual("Lineage", values = c(coral, navy)) +
+  scale_y_continuous("Percentage") +
   scale_x_discrete("Week-Year")
-  
 
-ggplot(percents,aes(x=week,y=percent,fill=lineage))+geom_col(position="fill")+facet_grid(~hcw)
+
+ggplot(percents, aes(x = week, y = percent, fill = lineage)) +
+  geom_col(position = "fill") +
+  facet_grid(~hcw)
 
 
 ```
