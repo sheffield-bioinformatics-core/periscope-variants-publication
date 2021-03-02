@@ -27,6 +27,7 @@ require(ggstance)
 require(ggbeeswarm)
 require(rstatix)
 require(waffle)
+require(rstudioapi)  
 
 #==============================
 # NIHR BRC Colour Palette
@@ -131,8 +132,7 @@ colorado <- function(src, boulder) {
 #======================================================================================
 # Lets prepare all of our data up front, all of our summaries to make plotting easier
 #======================================================================================
-
-setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 pillar1_canonical_counts = read.table("supplementary_file_2_pillar_1_canonical_counts.csv", header = T, sep = ",")
 pillar2_canonical_counts = read.table("supplementary_file_3_pillar_2_canonical_counts.csv", header = T, sep = ",")
@@ -401,7 +401,7 @@ ect = ggplot(ect_plot %>% filter(lineage %in% c("B.1.177", "B.1.1.7")), aes(line
           strip.text.x = element_text(face = "bold", colour = '#4D4845'),
           legend.position = "None",
           panel.grid.major.y = element_blank(),
-          plot.margin = margin(0.5, 0.5, 0, 0.5, "cm")
+          plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm")
         ) +
         scale_color_manual(values = c(aqua, coral)) +
         scale_y_continuous("ECT", limits = c(12, 45)) +
@@ -638,22 +638,31 @@ for_model_s = model_data %>% filter(orf == "S")
 model_s = lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model_s)
 summary(model_s)
 
+names(model_s$coefficients) <- c('(Intercept)','B.1.1','B.1.1.7','B.1.177','Days Since\nSymptom Onset')
+
 for_model_e = model_data %>% filter(orf == "E")
 model_e = lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model_s)
 summary(model_e)
+
+names(model_e$coefficients) <- c('(Intercept)','B.1.1','B.1.1.7','B.1.177','Days Since\nSymptom Onset')
 
 for_model_m = model_data %>% filter(orf == "M")
 model_m = lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model_m)
 summary(model_m)
 
+names(model_m$coefficients) <- c('(Intercept)','B.1.1','B.1.1.7','B.1.177','Days Since\nSymptom Onset')
+
 for_model_n = model_data %>% filter(orf == "N")
 model_n = lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model_n)
 summary(model_n)
+
+names(model_n$coefficients) <- c('(Intercept)','B.1.1','B.1.1.7','B.1.177','Days Since\nSymptom Onset')
 
 for_model_orf6 = model_data %>% filter(orf == "ORF6")
 model_orf6 = lm(sgRPTg_HQ+sgRPTg_LQ ~ lineage + Day_of_symptoms, data=for_model_orf6)
 summary(model_orf6)
 
+names(model_orf6$coefficients) <- c('(Intercept)','B.1.1','B.1.1.7','B.1.177','Days Since\nSymptom Onset')
  # Here I export them to a word document for easy inclusion in a manuscript
 
 export_summs(model_s,model_e,model_m,model_n,model_orf6,to.file="Word",file.name="model.docx",model.names = c("S", "E", "M", "N","ORF6"))
@@ -665,9 +674,12 @@ effect_all = plot_summs(summ(model_s),summ(model_e),summ(model_m),summ(model_n),
   ft_theme()+
   theme(
     panel.background = element_rect(fill = "grey97", color = "white"),
-    plot.margin = margin(0.2, 0, 0.2, 0.2, "cm"),
+    plot.margin = margin(0.2, 0.2, 0.2, 0, "cm"),
+    legend.key.size = unit(0.1, 'cm'),
+    legend.margin = margin(0.2, 0.2, 0.2, 0, "cm"),
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-    panel.grid.major.y = element_blank()
+    panel.grid.major.y = element_blank(),
+    legend.position = "bottom"
   ) +
   scale_y_discrete("")+
   guides(color=guide_legend(nrow=2,byrow=TRUE))
@@ -676,24 +688,87 @@ effect_all = plot_summs(summ(model_s),summ(model_e),summ(model_m),summ(model_n),
 # E. Our final plot in this figure is the pseudo time course
 #=======================================================================================
 
-days_pillar1 = merge(days,pillar1)%>%filter(lineage %in% c("B.1.177","B.1.1.7"))%>% filter(is.na(lineage)==F) %>% filter(sample != "SHEF-CC370") %>% filter(orf %in% c("S","N","M","E","ORF6")) %>% filter(is.na(Day_of_symptoms) == F)
-days_pillar1$orf = factor(days_pillar1$orf,levels=c("S","N","M","E","ORF6"))
+days_pillar1 = merge(days,pillar1)%>%filter(lineage %in% c("B.1.177","B.1.1.7"))%>% filter(is.na(lineage)==F) %>% filter(sample != "SHEF-CC370") %>% filter(orf %in% c("S", "E", "M", "N", "ORF6")) %>% filter(is.na(Day_of_symptoms) == F) %>% mutate(total=sgRPTg_HQ+sgRPTg_LQ)
 days_pillar1$lineage <- factor(days_pillar1$lineage, levels = c("B.1.177", "B.1.1.7"))
+days_pillar1$orf <- factor(days_pillar1$orf, levels = c("S", "E", "M", "N", "ORF6"))
 
-time_course=ggplot(days_pillar1,aes(Day_of_symptoms,sgRPTg_HQ+sgRPTg_LQ,color=lineage))+
-  geom_jitter(alpha=0.05)+
-  facet_wrap(~orf,scales = "free",ncol=5)+
-  coord_cartesian(xlim = c(0,10))+ scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,NA))+
-  geom_smooth(fill="white")+
-  scale_color_manual("Lineage",values=c(aqua,coral))+ft_theme()+theme(
+# stat.test=days_pillar1%>%
+#   filter(Day_of_symptoms>=0)%>%
+#   filter(Day_of_symptoms<=5)%>%
+#  group_by(orf,Day_of_symptoms) %>%
+#   mutate(total=sgRPTg_HQ+sgRPTg_LQ )%>%
+#   wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7","B.1.177")), paired = FALSE) %>%
+#   adjust_pvalue(method = "holm")
+
+stat.test=merge(days,main_orfs)%>%
+    filter(pillar=="Pillar 1")%>%
+    ungroup()%>%
+  filter(Day_of_symptoms>=0)%>%
+  filter(Day_of_symptoms<=4)%>%
+ group_by(orf,Day_of_symptoms) %>%
+  mutate(total=sgRPTg_HQ+sgRPTg_LQ )%>%
+wilcox_test(total ~ lineage, comparisons = list(c("B.1.1.7","B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm")
+
+stat.test=stat.test %>% mutate(p.adj.signif = str_replace(p.adj.signif,"ns",""))
+
+time_course=ggplot(days_pillar1%>%filter(Day_of_symptoms>=0),aes(Day_of_symptoms,sgRPTg_HQ+sgRPTg_LQ,color=lineage))+
+  geom_boxplot(outlier.shape = NA,aes(group=interaction(Day_of_symptoms,lineage)))+
+  geom_point(position=position_dodge(width=.7),height=0,alpha=0.1)+
+  facet_wrap(~orf,ncol=5)+
+  coord_cartesian(xlim = c(0,10),ylim=c(0,20000))+ 
+  scale_y_continuous(expression(bold(paste("sgRNA Reads/1000 Genomic (log"["10"], ")"))), trans = scales::pseudo_log_trans(base = 10),breaks=c(0,10,100,1000,10000),expand=c(0,0),limits=c(0,NA))+
+  geom_smooth(fill="grey80")+
+  scale_color_manual("Lineage",values=c(aqua,coral))+
+  ft_theme()+
+  theme(
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
     panel.background = element_rect(fill = "grey97", color = "white"),
     strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     legend.position = "bottom",
-    panel.grid.major.y = element_blank()
+    panel.grid.major.y = element_blank(),
 ) +
-  scale_x_continuous("Days Since Symptom Onset",breaks=c(0,2,4,6,8,10))+
-  expand_limits(y=0)
+  scale_x_continuous("Days Since Symptom Onset",breaks=c(0,2,4,6,8,10),expand=c(0.1,0))+
+  expand_limits(y=0)+
+  geom_bracket(data = stat.test, vjust=0.5,hjust=-0.1, aes(label=p.adj.signif, xmin = Day_of_symptoms-0.4, xmax = Day_of_symptoms+0.4), y.position = log10(5000), color = "#4D4845", step.increase = 0, step.group.by = "orf",angle=45,tip.length = 0.01)
+
+#=======================================================================================
+# RLU over time
+#=======================================================================================
+
+for_model_rlu = days %>% filter(Day_of_symptoms > -5) %>% filter(Day_of_symptoms < 20) %>% filter(lineage %in% c("B.1.1.7","B.1.177")) %>% filter(is.na(Day_of_symptoms)==F) %>% filter(is.na(rlu)==F)
+
+for_model_rlu$lineage <- factor(for_model_rlu$lineage, levels = c("B.1.177", "B.1.1.7"))
+for_model_rlu = for_model_rlu %>% filter(Day_of_symptoms >=0 )
+
+stat.test=days%>%
+  filter(is.na(rlu)==F) %>%
+    ungroup()%>%
+  filter(Day_of_symptoms>=0)%>%
+  filter(Day_of_symptoms<=4)%>%
+ group_by(Day_of_symptoms) %>%
+wilcox_test(rlu ~ lineage, comparisons = list(c("B.1.1.7","B.1.177")), paired = FALSE) %>%
+  adjust_pvalue(method = "holm")
+
+
+rlu=ggplot(for_model_rlu,aes(Day_of_symptoms,rlu,color=lineage))+
+  geom_boxplot(outlier.shape = NA,aes(group=interaction(Day_of_symptoms,lineage)))+
+  geom_point(position=position_dodge(width=.7),height=0,alpha=0.1)+
+  scale_x_continuous("Days Since Symptom Onset", breaks=c(0,1,2,3,4,5,6,7,8,9,10))+
+  geom_smooth(fill="grey")+
+  scale_y_continuous("RLU",limits=c(800,1500))+
+  coord_cartesian(xlim =c(0,10),ylim=c(1000,1350))+
+  ft_theme()+
+   theme(
+    panel.background = element_rect(fill = "grey97", color = "white"),
+    panel.grid.major.y = element_blank(),
+   legend.position = "bottom",
+   legend.key.size = unit(0.3, 'cm'),
+   legend.margin = margin(0.2,0.2,0.2,0.2,unit="cm"),
+   plot.margin = margin(0.2,0.2,0.5,0.5,unit="cm")
+  ) +
+  scale_color_manual("",values=c(aqua,coral))+
+  geom_bracket(data = stat.test, vjust=0.5,hjust=-0.1, aes(label=p.adj.signif, xmin = Day_of_symptoms-0.2, xmax = Day_of_symptoms+0.2), y.position = 1300, color = "#4D4845", step.increase = 0,angle=45,tip.length = 0.01)
 
 
 #=======================================================================================
@@ -701,10 +776,10 @@ time_course=ggplot(days_pillar1,aes(Day_of_symptoms,sgRPTg_HQ+sgRPTg_LQ,color=li
 #=======================================================================================
 
 top=ggarrange(a,b,labels=c("A","B"),nrow=1)
-right=ggarrange(effect_all,labels=c("D"),nrow=1,ncol=1)
-middle=ggarrange(c,right,labels=c("C",""),nrow=1,widths=c(0.8,1))
+right=ggarrange(effect_all,rlu,labels=c("D","E"),nrow=1,ncol=2)
+middle=ggarrange(c,right,labels=c("C",""),nrow=1,widths=c(0.6,1))
 
-ggarrange(top,middle,time_course,labels=c("","","E"),nrow=3,heights=c(1,1,1))
+ggarrange(top,middle,time_course,labels=c("","","F"),nrow=3,heights=c(1,1,1))
 ```
 
 
@@ -810,7 +885,7 @@ novel$total=novel$nsgRPTg_HQ + novel$nsgRPTg_LQ
 stat.test = compare_means(total ~ color, data = novel %>% filter(pos == 28282), method = "wilcox.test", paired = F)
 
 novel %>% filter(pos == 28282) %>% wilcox_effsize(total ~ color, comparisons = list(c("Other", "B.1.1.7")), paired = FALSE)
-
+novel$color=factor(novel$color,levels=c("Other", "B.1.1.7"))
 c=ggplot(novel %>% filter(pos == 28282) , aes(color, nsgRPTg_HQ + nsgRPTg_LQ,color = color)) +
   geom_violin(scale="width") +
   geom_jitter(height=0,size = 2, alpha = 0.1) +
@@ -821,7 +896,7 @@ c=ggplot(novel %>% filter(pos == 28282) , aes(color, nsgRPTg_HQ + nsgRPTg_LQ,col
     panel.background = element_rect(fill = "grey97", color = "white"),
     strip.text.x = element_text(face = "bold", colour = '#4D4845'),
     panel.grid.major.y = element_blank(),
-    plot.margin = margin(1, 0.5, 0.5, 1, "cm"),
+    plot.margin = margin(0.5, 0.5, 0.5, 1, "cm"),
     axis.text.x=element_text(angle=45,vjust=1,hjust=1)
   )+
   scale_color_manual(values=c(grey,coral))+
@@ -1467,8 +1542,6 @@ bottom=ggarrange(plot_ect,plot_rlu,labels=c("B","C"),ncol=2)
 ggarrange(ggtexttable(export_summs(summ(model_ect),summ(model_rlu),model.names = c("ECT", "RLU"),number_format = "%.2f"),theme = ttheme("minimal"),row.names(F),colnames(F)),bottom,labels=c("A",""),nrow=2,heights=c(1,1))
 
 ```
-
-
 
 
 
