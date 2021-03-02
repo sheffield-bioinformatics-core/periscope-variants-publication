@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE,warnigs=FALSE,echo=FALSE,messages=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, dev = c('pdf', 'png'))
 
+rstudioapi::isAvailable(
+  knitr::opts_knit$set(root.dir = dirname(rstudioapi::getActiveDocumentContext()$path))
+)
 require(ggplot2)
 require(reshape2)
 require(scales)
@@ -132,7 +135,7 @@ colorado <- function(src, boulder) {
 #======================================================================================
 # Lets prepare all of our data up front, all of our summaries to make plotting easier
 #======================================================================================
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 pillar1_canonical_counts = read.table("supplementary_file_2_pillar_1_canonical_counts.csv", header = T, sep = ",")
 pillar2_canonical_counts = read.table("supplementary_file_3_pillar_2_canonical_counts.csv", header = T, sep = ",")
@@ -230,10 +233,12 @@ days = merge(metadata_pillar1,days,by.x="sample",by.y="external_id")
 #=======================================================================================
 
 counts = read.table("supplementary_file_6_pillar_1_noncanonical_counts.csv", header = T, sep = ",")
+counts = counts %>% filter(mapped_reads>=50000)
 novel_shef = merge(counts, metadata_pillar1)
 novel_shef = novel_shef %>% separate(orf, c("novel", "pos"), sep = "_")
 novel_shef$pos = as.numeric(as.character(novel_shef$pos))
 novel_shef$location = "SHEF"
+
 novel_shef$y = ifelse(novel_shef$lineage == "B.1.1.7", -0.05, 0.05)
 novel = novel_shef %>% filter(pos > 50)
 novel$start = 50
@@ -884,6 +889,10 @@ novel$total=novel$nsgRPTg_HQ + novel$nsgRPTg_LQ
 
 stat.test = compare_means(total ~ color, data = novel %>% filter(pos == 28282), method = "wilcox.test", paired = F)
 
+
+effect.size = novel %>% filter(pos == 28282) %>%
+  wilcox_effsize(total ~ color, comparisons =  list(c("B.1.1.7", "other")), paired = FALSE)
+
 novel %>% filter(pos == 28282) %>% wilcox_effsize(total ~ color, comparisons = list(c("Other", "B.1.1.7")), paired = FALSE)
 novel$color=factor(novel$color,levels=c("Other", "B.1.1.7"))
 c=ggplot(novel %>% filter(pos == 28282) , aes(color, nsgRPTg_HQ + nsgRPTg_LQ,color = color)) +
@@ -1049,7 +1058,7 @@ d = full +  coord_cartesian(xlim=c(28260,28300),ylim=c(-0.2,0.2))+
 # E. Flowchart of proposed ORF9b model
 #=======================================================================================
 
-setwd('/home/md1mpar/Documents/projects/periscope/elephants/nature_medicine_manuscript/supplementary_data_files')
+
 img1 <- readPNG("images/full_model.png")
 mutation = ggplot() +
   background_image(img1) +
